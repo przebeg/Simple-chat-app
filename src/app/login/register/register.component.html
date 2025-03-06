@@ -1,21 +1,23 @@
 @defer {
     <div class="register-input profile-image" [class.dragging] = "isDraggingFile" (dragover)="onDragOver($event)" (dragleave)="onDragEnd($event)" (drop)="onFileDrop($event)">
-        <span class="small-text">Profile image</span>
+        <span class="small-text">Profile image (optional)</span>
         <div id="profile-image-preview" [style.backgroundImage]="'url(' + (imageSrc? imageSrc : 'assets/profile-image-placeholder.png') + ')'"></div>
         <input type="file" accept="image/*" id="profile-image-input" (change)="onFileSelect($event)">
         <span class="small-text">Drag image here or <span class="link" (click)="profileImageInputClick()">click here to select</span></span>
     </div>
     <div class="register-input">
-        <span class="small-text" [class] = "{'checking': usernameStatus === 'checking', 'valid': usernameStatus === 'valid', 'not-valid': usernameStatus === 'not-valid'}">Username</span>
-        <input type="text" required [formControl] = "username" (blur)="getAvailability(username.value)">
+        <span class="small-text" [class] = "usernameInputClass">Username</span>
+        <input type="text" required [formControl] = "username" (blur)="getAvailability('username', username)">
+        <span class="small-text message not-valid" [class] = "usernameInputClass">{{usernameInputMessage}}</span>
     </div>
     <div class="register-input">
         <span class="small-text">Password</span>
         <input type="password" autocomplete="false" required [formControl] = "password">
     </div>
     <div class="register-input">
-        <span class="small-text" [class] = "{'checking': emailStatus === 'true', 'valid': emailStatus === 'valid', 'not-valid': emailStatus === 'not-valid'}">Email (optional)</span>
-        <input type="email" autocomplete="email" [formControl] = "email" (blur)="getAvailability(email.value)">
+        <span class="small-text" [class] = "emailInputClass">Email (optional)</span>
+        <input type="email" autocomplete="email" [formControl] = "email" (blur)="getAvailability('email', email)">
+        <div class="small-text message not-valid" [class] = "emailInputClass">{{emailInputMessage}}</div>
     </div>
     <span class="small-text" id="back-to-login-text"><a routerLink="/login/sign-in" class="link">Back to login</a></span>
 }

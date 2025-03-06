@@ -1,7 +1,7 @@
 import { Component, Inject, PLATFORM_ID, Renderer2, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser, JsonPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpParams } from '@angular/common/http';
 
 @Component({
@@ -65,44 +65,64 @@ export class RegisterComponent {
 
 
   //handle register form
-  username: FormControl = new FormControl();
-  password: FormControl = new FormControl();
-  email: FormControl = new FormControl();
-  usernameStatus: string | null = null;
-  emailStatus: string | null = null;
+  username: FormControl = new FormControl('', [Validators.required, Validators.minLength(3)]);
+  password: FormControl = new FormControl('', [Validators.required]);
+  email: FormControl = new FormControl('', [Validators.email, Validators.minLength(3)]);
+  usernameInputClass: string = '';
+  emailInputClass: string = '';
+  usernameInputMessage: string = '';
+  emailInputMessage: string = '';
   
 
   //check for username and email availability
-  getAvailability(usernameOrEmail: string = ''){
-    if(usernameOrEmail.length < 1)
+  getAvailability(type: string, callerInput: FormControl){
+
+    const isEmail = type === 'email';
+    const inputData = callerInput.value as string;
+
+    if(inputData.length === 0)
       return;
 
-    const isEmail = usernameOrEmail.includes('@');
+    //check client validators
+    if(isEmail && !this.email.valid){
+      this.emailInputClass = 'not-valid';
+      this.emailInputMessage = 'Please provide a valid email'
+      return;
+    }
+    if(!isEmail && !this.username.valid){
+      this.usernameInputClass = 'not-valid';
+      this.usernameInputMessage = 'Minimum 3 characters in length'
+      return;
+    }
+    
     const params = new HttpParams()
-      .set('data', usernameOrEmail);
+      .set('type', type)
+      .set('data', inputData);
     
     //set classes
     if(isEmail)
-      this.emailStatus = 'checking';
-    else this.usernameStatus = 'checking';
+      this.emailInputClass = 'checking';
+    else this.usernameInputClass = 'checking';
+
 
     //interface for api response
     interface AvailabilityResponse {
+      inputType: string //"email" or "username"
       available: boolean;
       message: string
     }
 
     //get availability
-    this.httpClient.get<AvailabilityResponse>('api/express/check' + (isEmail? 'Email' : 'Username') + 'Availability', {params})
+    this.httpClient.get<AvailabilityResponse>('api/express/checkAvailability', {params})
     .subscribe(response => {
 
-      console.log(response)
+      const isResponseTypeEmail = response.inputType.toLowerCase() === 'email';
 
-      if(response.message.toLowerCase().includes('username'))
-        this.usernameStatus = (response.available? 'valid' : 'not-valid');
+      if(isResponseTypeEmail)
+        this.emailInputClass = (response.available? 'valid' : 'not-valid');
 
-      else if(response.message.toLowerCase().includes('email'))
-        this.emailStatus = (response.available? 'valid' : 'not-valid');
+      else
+        this.usernameInputClass = (response.available? 'valid' : 'not-valid');
     })
   }
 

@@ -42,6 +42,7 @@
 
 .register-input input{
   margin-top: 8px;
+  margin-bottom: 4px;
   font-family: "Noto Sans", serif;
   font-size: 1rem;
   color: white;
@@ -150,7 +151,7 @@
   animation: draggingAppear .4s forwards;
 }
 
-.register-input > .checking::after{
+.register-input > :not(.message).checking::after{
   content: '';
   display: inline-block;
   vertical-align: middle;
@@ -164,7 +165,7 @@
   margin-left: 5px;
 }
 
-.register-input > .valid::after{
+.register-input > :not(.message).valid::after{
   content: "";
   display: inline-block;
   vertical-align: middle;
@@ -172,7 +173,7 @@
   height: 14px;
   background-color: green;
   background-image: url('/assets/check.png');
-  background-size: 10px;
+  background-size: 8px;
   background-repeat: no-repeat;
   background-position: center;
   border-radius: 50%;
@@ -180,7 +181,7 @@
   margin-left: 5px;
 }
 
-.register-input > .not-valid::after{
+.register-input > :not(.message).not-valid::after{
   content: "";
   display: inline-block;
   vertical-align: middle;
@@ -188,12 +189,23 @@
   height: 14px;
   background-color: red;
   background-image: url('/assets/x-close.png');
-  background-size: 10px;
+  background-size: 8px;
   background-repeat: no-repeat;
   background-position: center;
   border-radius: 50%;
   text-align: center;
   margin-left: 5px;
+}
+
+.register-input .small-text.message{
+  display: inline-block;
+  visibility: hidden;
+}
+
+.register-input .small-text.message.not-valid{
+  width: 100%;
+  text-align: center;
+  color: red;
 }
 
 
