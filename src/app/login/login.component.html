@@ -1,0 +1,14 @@
+<div id="wrapper">
+    <div id="sign-in-form-wrapper" [className]="isRegister? 'register' : ''">
+        <div id="logo-title-wrapper">
+            <img src="assets/options-bar-logo.png" alt="Logo">
+            <h1 class="big-text">{{headerName}}</h1>
+        </div>
+        <router-outlet></router-outlet>
+        <div id="submit-button-wrapper">
+            <div class="big-button" id="submit-button">
+                <span>Submit</span>
+            </div>
+        </div>
+    </div>
+</div>

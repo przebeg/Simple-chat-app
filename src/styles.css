@@ -1,1 +1,75 @@
 /* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+.big-button {
+    background: linear-gradient(100deg, #FF31D9 0%, #F60947 50%, #6C00F5 100%);
+    width: fit-content;
+    padding: 16px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: filter .13s ease-in-out;
+    background-repeat: no-repeat;
+  }
+  
+  .big-button:hover{
+    filter: saturate(1.3);
+  }
+  
+  .big-button:active{
+    box-shadow: inset 0px 0px 18px -10px rgba(0, 0, 0, 1);
+  }
+  
+  .big-button span{
+    font-family: "Noto Sans", serif;
+    font-size: 1.5rem;
+    color: white;
+    text-align: center;
+  }
+
+
+
+
+  .small-text{
+    font-family: "Noto Sans", serif;
+    font-size: .8rem;
+    color: white;
+    text-align: center;
+    padding-left: 8px;
+  }
+
+  .small-text .link{
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .big-text{
+    font-family: "Noto Sans", serif;
+    font-size: 1.5rem;
+    color: white;
+    text-align: center;
+  }
+
+  .circular-loader{
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 9px solid;
+    border-color: rgba(221, 221, 240, 0);
+    border-right-color: #C1A4DF;
+    animation: spinner-d3wgkg 1s infinite linear;
+ }
+ .circular-loader.gradient{
+   border-color: linear-gradient(100deg, #FF31D9 0%, #F60947 50%, #6C00F5 100%);
+ }
+ 
+ @keyframes spinner-d3wgkg {
+    to {
+       transform: rotate(1turn);
+    }
+ }
+
+

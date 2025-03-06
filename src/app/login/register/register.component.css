@@ -1,0 +1,215 @@
+:host {
+  display: block;
+  min-height: 370px;
+  overflow-y: hidden;
+  display: block;
+  min-height: 370px;
+  width: 100%;
+  min-height: 50%;
+  height: auto;
+  background-color: #1F1D1D;
+  box-shadow: inset 0px 0px 11px -2px rgba(0, 0, 0, 1);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  padding-bottom: 30px;
+  padding-top: 30px;
+}
+
+
+.register-input * {
+  display: block;
+} 
+
+.register-input {
+  width: 45%;
+  height: auto;
+  box-sizing: border-box;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+}
+
+
+.register-input:not(:has(input[type=file])){
+  padding-left: 0;
+}
+
+.register-input input{
+  margin-top: 8px;
+  font-family: "Noto Sans", serif;
+  font-size: 1rem;
+  color: white;
+  width: 100%;
+  padding: 16px;
+  background-color: #312F2F;
+  box-shadow: inset 0px 0px 5px -2px rgba(0, 0, 0, 1);
+  border: none;
+  border-radius: 15px;
+  position: relative;
+  transition: background-color 0.1s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.register-input input:focus{
+  background-color: #1F1D1D;
+  outline: none;
+  box-shadow: inset 0px 0px 11px -2px rgba(0, 0, 0, 1);
+}
+
+.register-input.checkbox {
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.register-input.checkbox input {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  transform: scale(1.3);
+}
+
+.register-input.checkbox input:focus{
+  background-color: default;
+  box-shadow: none;
+}
+
+.register-input.profile-image{
+  width: 60%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  box-shadow: inset 0px 0px 5px -2px rgba(0, 0, 0, 1);
+  background-color: #312F2F;
+  margin: 18px;
+  border-radius: 15px;
+}
+
+.register-input.profile-image input{
+  display: none;
+}
+
+#profile-image-preview{
+  height: 150px;
+  width: 150px;
+  background-size: cover;
+  background-position: center center;
+  border-radius: 50%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+#sign-up-text-container{
+  box-sizing: border-box;
+  width: 100%;
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+#loader-wrapper{
+  position: relative;
+  width: 100%;
+  height: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#back-to-login-text{
+  width: 100%;
+  padding: 10px;
+}
+
+.register-input.profile-image.dragging{
+  position: relative;
+}
+
+.register-input.profile-image.dragging::after{
+  content: "+ Drop file here";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(49, 47, 47, 0);
+  box-shadow: inherit;
+  border-radius: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Noto Sans", serif;
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0);
+  text-align: center;
+  animation: draggingAppear .4s forwards;
+}
+
+.register-input > .checking::after{
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  text-align: center;
+  border: 2px solid #C1A4DF;
+  border-bottom-color: transparent;
+  animation: spinner-d3wgkg 1.5s infinite linear;
+  margin-left: 5px;
+}
+
+.register-input > .valid::after{
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 14px;
+  height: 14px;
+  background-color: green;
+  background-image: url('/assets/check.png');
+  background-size: 10px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+  text-align: center;
+  margin-left: 5px;
+}
+
+.register-input > .not-valid::after{
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 14px;
+  height: 14px;
+  background-color: red;
+  background-image: url('/assets/x-close.png');
+  background-size: 10px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+  text-align: center;
+  margin-left: 5px;
+}
+
+
+@keyframes draggingAppear {
+  from{
+    background-color: rgba(49, 47, 47, 0);
+    color: rgba(255, 255, 255, 0);
+  }
+  to{
+    background-color: rgba(49, 47, 47, .9);
+    color: rgba(255, 255, 255, 255);
+  }
+}
+
+@keyframes spinner-d3wgkg {
+  to {
+     transform: rotate(1turn);
+  }
+}

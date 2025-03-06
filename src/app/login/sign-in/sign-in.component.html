@@ -1,0 +1,25 @@
+@defer {
+    <div id="sign-in-form">
+        <div class="sign-in-input">
+            <span class="small-text">Username or email</span>
+            <input type="text" autocomplete="email" required [formControl]="username">
+        </div>
+        <div class="sign-in-input">
+            <span class="small-text">Password</span>
+            <input type="password" autocomplete="false" required [formControl]="password">
+        </div>
+        <div class="sign-in-input checkbox">
+            <span class="small-text">Remember me</span>
+            <input type="checkbox" [formControl]="rememberMe">
+        </div>
+        <div id="sign-up-text-container">
+            <span class="small-text" id="sign-up-text">Don't have an account? <a routerLink="/login/register" class="link">Sign up here</a></span>
+        </div>
+    </div>
+}
+@loading (minimum 0.35s) {
+    <div id="loader-wrapper">
+        <div class="circular-loader gradient"></div>
+    </div>
+}
+

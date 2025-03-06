@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+#options-bar{
+  height: 100%;
+  width: 80px;
+  background-color: #1F1D1D;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#logo-img{
+  width: 100%;
+  max-width: 60px;
+  height: auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+#options-bar-icons-wrapper{
+  width: 100%;
+  height: auto;
+  margin-top: 80px;
+}
+
+#options-bar-icons-wrapper .option-icon{
+  width: 100%;
+  height: auto;
+  min-height: 10px;
+  box-sizing: border-box;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color .1s ease-out;
+}
+
+#options-bar-icons-wrapper .option-icon:hover{
+  background-color: #4a4a4a;
+}
+
+#options-bar-icons-wrapper .option-icon img{
+  width: 100%;
+  max-width: 40px;
+  height: auto;
+}
+
+#options-bar-icons-wrapper .option-icon span{
+  font-family: "Noto Sans", serif;
+  font-size: .76rem;
+  color: white;
+  text-align: center;
+}
+
+#light-mode-switch{
+  width: calc(100% - 30px);
+  height: 100px;
+  background-color: black;
+  border-radius: 50px;
+  padding: 5px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-direction: column;
+  position: relative;
+  margin-top: 200px;
+}
+
+.light-mode-switch-inner{
+  width: 100%;
+  background-color: #322F2F;
+  height: 50%;
+  border-radius: 50px;
+}
+
+.light-mode-switch-inner.transit{
+  transition: height 0.2s ease-out;
+}
+
+.light-mode-switch-inner:nth-last-child(1 of .light-mode-switch-inner){
+  background-color: transparent;
+}
+
+#light-mode-switch-icons-wrapper{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-direction: column;
+  padding-top: 2.5px;
+  padding-bottom: 2.5px;
+  cursor: pointer;
+}
+
+#light-mode-switch-icons-wrapper img{
+  width: 30px;
+  height: auto;
+
+}
+#light-mode-switch-icons-wrapper img:nth-child(2){
+  padding-bottom: 7px;
+}
+
+#profile-info-wrapper{
+  background-color: red;
+  box-sizing: border-box;
+  padding: 10px;
+  position: absolute;
+  bottom: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

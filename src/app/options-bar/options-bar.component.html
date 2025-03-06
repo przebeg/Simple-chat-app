@@ -1,0 +1,28 @@
+<div id="options-bar">
+    <img src="assets/options-bar-logo.png" id="logo-img" alt="Anglar Placeholder Logo">
+    <div id="options-bar-icons-wrapper">
+        <div class="option-icon">
+            <img src="assets/options-bar-icons/home.png" alt="Home Icon">
+            <span>Home</span>
+        </div>
+        <div class="option-icon">
+            <img src="assets/options-bar-icons/search.svg" alt="Home Icon">
+            <span>Search</span>
+        </div>
+        <div class="option-icon">
+            <img src="assets/options-bar-icons/settings.svg" alt="Home Icon">
+            <span>Settings</span>
+        </div>
+    </div>
+    <div id="light-mode-switch" [attr.light-mode]="lightMode" (click)="lightSwitchClick()">
+        <div class="light-mode-switch-inner"></div>
+        <div class="light-mode-switch-inner" [class.transit]="lightModeTransitEnabled" [style.height]="lightMode === 'dark'? '0%' : '50%'"></div>
+        <div id="light-mode-switch-icons-wrapper">
+            <img src="assets/light-mode-switch/bright-mode.svg" alt="Bright Mode">
+            <img src="assets/light-mode-switch/night-mode.svg" alt="Night Mode">
+        </div>
+    </div>
+    <div id="profile-info-wrapper">
+        <profile-info-component />
+    </div>
+</div>
