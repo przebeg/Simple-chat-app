@@ -2,7 +2,7 @@ import { Component, Inject, PLATFORM_ID, Renderer2, signal } from '@angular/core
 import { CommonModule, isPlatformBrowser, JsonPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpParams, HttpStatusCode } from '@angular/common/http';
 
 @Component({
   selector: 'register-component',
@@ -80,8 +80,13 @@ export class RegisterComponent {
     const isEmail = type === 'email';
     const inputData = callerInput.value as string;
 
-    if(inputData.length === 0)
+    if(inputData.length === 0){
+      if(isEmail)
+        this.emailInputClass = '';
+      else this.usernameInputClass = '';
+
       return;
+    }
 
     //check client validators
     if(isEmail && !this.email.valid){
@@ -107,14 +112,17 @@ export class RegisterComponent {
 
     //interface for api response
     interface AvailabilityResponse {
+      status: HttpStatusCode | null,
       inputType: string //"email" or "username"
       available: boolean;
       message: string
     }
 
     //get availability
-    this.httpClient.get<AvailabilityResponse>('api/express/checkAvailability', {params})
+    this.httpClient.get<AvailabilityResponse>('api/express/login/checkAvailability', {params})
     .subscribe(response => {
+
+      console.log(response.status)
 
       const isResponseTypeEmail = response.inputType.toLowerCase() === 'email';
 

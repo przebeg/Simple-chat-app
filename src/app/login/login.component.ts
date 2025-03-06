@@ -5,17 +5,19 @@ import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { FormService } from '../shared/form.service';
 import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { response } from 'express';
 
 @Component({
   selector: 'login',
-  imports: [RouterOutlet, ReactiveFormsModule],
+  imports: [RouterOutlet, ReactiveFormsModule, HttpClientModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
 
 export class LoginComponent {
   
-  constructor(private formService: FormService, private router: Router){
+  constructor(private formService: FormService, private router: Router, private httpClient: HttpClient){
     
     //get child router form content via service
     formService.subjectValue.subscribe((value) => console.log(value));
@@ -46,4 +48,21 @@ export class LoginComponent {
 
   //switch to class register
   isRegister: boolean = false;
+
+
+  //on submit button click
+  submitButtonClick(){
+    if(this.isRegister){
+      const newUserData = {
+        image: 'null',
+        username: 'nazwa',
+        password: 'haslo',
+        email: 'imejl@wp.pl'
+      }
+      this.httpClient.post('/api/express/login/registerNewUser', {'userData': newUserData}).subscribe((response) => {
+        
+      })
+    }
+      
+  }
 }

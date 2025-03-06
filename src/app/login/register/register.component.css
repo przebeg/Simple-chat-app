@@ -32,7 +32,7 @@
   flex-direction: column;
   flex-wrap: wrap;
   align-items: flex-start;
-
+  position: relative;
 }
 
 
@@ -198,14 +198,17 @@
 }
 
 .register-input .small-text.message{
-  display: inline-block;
+  display: block;
   visibility: hidden;
+  position: absolute;
+  bottom: 0;
 }
 
 .register-input .small-text.message.not-valid{
+  visibility: visible;
   width: 100%;
   text-align: center;
-  color: red;
+  color: #b00202;
 }
 
 

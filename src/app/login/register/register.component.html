@@ -8,7 +8,7 @@
     <div class="register-input">
         <span class="small-text" [class] = "usernameInputClass">Username</span>
         <input type="text" required [formControl] = "username" (blur)="getAvailability('username', username)">
-        <span class="small-text message not-valid" [class] = "usernameInputClass">{{usernameInputMessage}}</span>
+        <span class="small-text message" [class] = "usernameInputClass"></span>
     </div>
     <div class="register-input">
         <span class="small-text">Password</span>
@@ -17,7 +17,7 @@
     <div class="register-input">
         <span class="small-text" [class] = "emailInputClass">Email (optional)</span>
         <input type="email" autocomplete="email" [formControl] = "email" (blur)="getAvailability('email', email)">
-        <div class="small-text message not-valid" [class] = "emailInputClass">{{emailInputMessage}}</div>
+        <div class="small-text message" [class] = "emailInputClass">{{emailInputMessage}}</div>
     </div>
     <span class="small-text" id="back-to-login-text"><a routerLink="/login/sign-in" class="link">Back to login</a></span>
 }
