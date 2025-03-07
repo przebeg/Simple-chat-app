@@ -109,7 +109,6 @@ export class RegisterComponent {
       this.emailInputClass = 'checking';
     else this.usernameInputClass = 'checking';
 
-
     //interface for api response
     interface AvailabilityResponse {
       status: HttpStatusCode | null,
@@ -128,7 +127,6 @@ export class RegisterComponent {
 
       if(isResponseTypeEmail)
         this.emailInputClass = (response.available? 'valid' : 'not-valid');
-
       else
         this.usernameInputClass = (response.available? 'valid' : 'not-valid');
     })

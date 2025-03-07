@@ -1,6 +1,6 @@
 import { afterNextRender, Component, Injectable } from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule, ValueChangeEvent} from '@angular/forms'
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { FormService } from '../../shared/form.service';
 import { RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
@@ -18,9 +18,12 @@ import { filter } from 'rxjs';
 
 export class SignInComponent {
 
-
   savedUsername = '';
   savedRememberMe = 'false';
+
+  username: FormControl = new FormControl<string>('');
+  password: FormControl = new FormControl<string>('');
+  rememberMe: FormControl = new FormControl<boolean>(false);
   
   constructor(public formService: FormService){
 
@@ -43,18 +46,12 @@ export class SignInComponent {
     this.rememberMe.events.pipe(filter(e => e instanceof ValueChangeEvent)).subscribe(e => {
       window.localStorage.setItem('savedRememberMe', e.value);
     })
+
+    //on form values change provide do formService
+    combineLatest([this.username.valueChanges, this.password.valueChanges]).subscribe(([username, password]) => {
+      this.formService.loginFormChange({username: username, password: password});
+    })
    
-
-    this.username.valueChanges.subscribe((value) => {
-      this.formService.updateValue(value);
-    });
   }
-  
-  username: FormControl = new FormControl('');
-  password: FormControl = new FormControl('');
-  rememberMe: FormControl = new FormControl(false);
-
-  private formControlSubject = new BehaviorSubject<string>('');
-  formValue = this.formControlSubject.asObservable();
   
 }

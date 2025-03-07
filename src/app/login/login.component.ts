@@ -20,7 +20,7 @@ export class LoginComponent {
   constructor(private formService: FormService, private router: Router, private httpClient: HttpClient){
     
     //get child router form content via service
-    formService.subjectValue.subscribe((value) => console.log(value));
+    formService.loginForm.subscribe((value) => console.log(value));
 
     //get router end-point
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event) => {
@@ -59,8 +59,9 @@ export class LoginComponent {
         password: 'haslo',
         email: 'imejl@wp.pl'
       }
+      console.log('x')
       this.httpClient.post('/api/express/login/registerNewUser', {'userData': newUserData}).subscribe((response) => {
-        
+        null
       })
     }
       
