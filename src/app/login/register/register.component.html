@@ -1,23 +1,26 @@
 @defer {
     <div class="register-input profile-image" [class.dragging] = "isDraggingFile" (dragover)="onDragOver($event)" (dragleave)="onDragEnd($event)" (drop)="onFileDrop($event)">
         <span class="small-text">Profile image (optional)</span>
-        <div id="profile-image-preview" [style.backgroundImage]="'url(' + (imageSrc? imageSrc : 'assets/profile-image-placeholder.png') + ')'"></div>
+        <div id="profile-image-preview" [class.removable] = "profileImageRemovable" (click)="profileImageRemoveClick()" (mouseover)="profileImageMouseOver()" (mouseleave)="profileImageMouseLeave()" [style.backgroundImage]="'url(' + (imageSrc? imageSrc : 'assets/profile-image-placeholder.png') + ')'">
+            <div id="image-delete-overlay"></div>
+            <span class="small-text link">Remove</span>
+        </div>
         <input type="file" accept="image/*" id="profile-image-input" (change)="onFileSelect($event)">
         <span class="small-text">Drag image here or <span class="link" (click)="profileImageInputClick()">click here to select</span></span>
     </div>
-    <div class="register-input">
-        <span class="small-text" [class] = "usernameInputClass">Username</span>
+    <div class="register-input" [class.disabled] = "username.disabled">
+        <span class="small-text" [class] = "usernameInputClass | async">Username</span>
         <input type="text" required [formControl] = "username" (blur)="getAvailability('username', username)">
-        <span class="small-text message" [class] = "usernameInputClass"></span>
+        <span class="small-text message" [class] = "usernameInputClass">{{usernameInputMessage | async}}</span>
     </div>
-    <div class="register-input">
+    <div class="register-input" [class.disabled] = "password.disabled">
         <span class="small-text">Password</span>
         <input type="password" autocomplete="false" required [formControl] = "password">
     </div>
     <div class="register-input">
-        <span class="small-text" [class] = "emailInputClass">Email (optional)</span>
+        <span class="small-text" [class] = "emailInputClass | async" [class.disabled] = "email.disabled">Email (optional)</span>
         <input type="email" autocomplete="email" [formControl] = "email" (blur)="getAvailability('email', email)">
-        <div class="small-text message" [class] = "emailInputClass">{{emailInputMessage}}</div>
+        <div class="small-text message" [class] = "emailInputClass">{{emailInputMessage | async}}</div>
     </div>
     <span class="small-text" id="back-to-login-text"><a routerLink="/login/sign-in" class="link">Back to login</a></span>
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -23,9 +23,15 @@ export class FormService {
     password: '',
     email: ''
   })
-  registerProfilePicture = this.registerFormSubject.asObservable();
+  registerForm = this.registerFormSubject.asObservable();
   registerFormChange(registerForm: object){
     this.registerFormSubject.next(registerForm);
+  }
+
+  //handle parent (submit button click) response proxying
+  public registerSubmitResponse: Subject<object> = new Subject();
+  registerSubmitSetResponse(registerResponse: object){
+    this.registerSubmitResponse.next(registerResponse);
   }
 
   constructor() { }

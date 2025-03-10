@@ -38,7 +38,7 @@
     padding-left: 8px;
   }
 
-  .small-text .link{
+  .small-text .link,  .small-text.link{
     text-decoration: none;
     color: white;
     font-weight: 700;
