@@ -8,19 +8,19 @@
         <input type="file" accept="image/*" id="profile-image-input" (change)="onFileSelect($event)">
         <span class="small-text">Drag image here or <span class="link" (click)="profileImageInputClick()">click here to select</span></span>
     </div>
-    <div class="register-input" [class.disabled] = "username.disabled">
-        <span class="small-text" [class] = "usernameInputClass | async">Username</span>
-        <input type="text" required [formControl] = "username" (blur)="getAvailability('username', username)">
-        <span class="small-text message" [class] = "usernameInputClass">{{usernameInputMessage | async}}</span>
+    <div class="register-input" [class.disabled] = "usernameInput.formControl.disabled">
+        <span class="small-text" [class] = "usernameInput.inputClass| async">Username</span>
+        <input type="text" required [formControl] = "usernameInput.formControl" (blur)="getAvailability('username', usernameInput.formControl)">
+        <span class="small-text message" [class] = "usernameInput.inputClass">{{usernameInput.inputMessage| async}}</span>
     </div>
-    <div class="register-input" [class.disabled] = "password.disabled">
+    <div class="register-input" [class.disabled] = "passwordInput.formControl.disabled">
         <span class="small-text">Password</span>
-        <input type="password" autocomplete="false" required [formControl] = "password">
+        <input type="password" autocomplete="false" required [formControl] = "passwordInput.formControl">
     </div>
     <div class="register-input">
-        <span class="small-text" [class] = "emailInputClass | async" [class.disabled] = "email.disabled">Email (optional)</span>
-        <input type="email" autocomplete="email" [formControl] = "email" (blur)="getAvailability('email', email)">
-        <div class="small-text message" [class] = "emailInputClass">{{emailInputMessage | async}}</div>
+        <span class="small-text" [class] = "emailInput.inputClass | async" [class.disabled] = "emailInput.formControl.disabled">Email (optional)</span>
+        <input type="email" autocomplete="email" [formControl] = "emailInput.formControl" (blur)="getAvailability('email', emailInput.formControl)">
+        <div class="small-text message" [class] = "emailInput.inputClass | async">{{emailInput.inputMessage | async}}</div>
     </div>
     <span class="small-text" id="back-to-login-text"><a routerLink="/login/sign-in" class="link">Back to login</a></span>
 }

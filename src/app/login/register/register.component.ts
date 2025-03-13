@@ -5,6 +5,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpParams, HttpStatusCode } from '@angular/common/http';
 import { FormService } from '../../shared/form.service';
 import { BehaviorSubject, combineLatest, Observable, startWith, Subject } from 'rxjs';
+import { RegisterInput, Fields, SubmitResponse } from './types';
 
 @Component({
   selector: 'register-component',
@@ -15,83 +16,75 @@ import { BehaviorSubject, combineLatest, Observable, startWith, Subject } from '
 })
 export class RegisterComponent {
 
+
   constructor(private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object, private httpClient: HttpClient, private formService: FormService){
     
     //on form change update formService
     combineLatest([
       this.profileImage,
-      this.username.valueChanges, 
-      this.password.valueChanges.pipe(startWith('')), 
-      this.email.valueChanges
+      this.usernameInput.formControl.valueChanges, 
+      this.passwordInput.formControl.valueChanges.pipe(startWith('')), 
+      this.emailInput.formControl.valueChanges
     ]).subscribe(([profileImage, username, password, email]) => {
 
       //save to sessionStorage
       if(window){
         window.sessionStorage.setItem('registerSavedProfileImage', profileImage as string)
-        window.sessionStorage.setItem('registerSavedUsername', username);
-        window.sessionStorage.setItem('registerSavedEmail', email);
+        window.sessionStorage.setItem('registerSavedUsername', this.usernameInput.formControl.value?? '');
+        window.sessionStorage.setItem('registerSavedEmail', this.emailInput.formControl.value?? '');
       }
 
       formService.registerFormChange({profilePicture: profileImage, username: username, password: password, email: email})
     })
 
+    //on profile image change update image src
     this.profileImage.subscribe((profileImageData) => this.imageSrc = profileImageData);
 
-
     //listen for parent (submit button) response
-    interface Fields {
-      type: string,
-      valid: boolean,
-      message: string
-    }
-    interface SubmitResponse {
-      state: string //success, fail, waiting
-      fields: Array<Fields>
-    }
-    const inputs = [
-      {name: 'username', formControl: this.username, class: this.usernameInputClass, message: this.usernameInputMessage},
-      {name: 'password', formControl: this.username, class: this.usernameInputClass, message: this.usernameInputMessage},
-    ];
     this.formService.registerSubmitResponse.subscribe((submitResponse) => {
       switch((submitResponse as SubmitResponse).state){
-        case 'waiting': inputs.forEach((input: FormControl) => input.disable()); break;
+
+        //on waiting disable all inputs and wait
+        case 'waiting': this.registerInputs.forEach((input: RegisterInput) => input.formControl.disable()); break;
+
+        //on fail set classes and messages accordingly
         case 'fail': 
-          inputs.forEach((input: FormControl) => input.enable());
-          (submitResponse as SubmitResponse).fields.forEach((field, fieldIndex) => {
-            inputs[fieldIndex]
-          })
+          this.registerInputs.forEach((input: RegisterInput) => input.formControl.enable());
+          (submitResponse as SubmitResponse).fields.forEach((field: Fields, fieldIndex: number) => {
+
+            const input = this.registerInputs.find((input: RegisterInput) => input.name === field.name) as RegisterInput;
+            input.inputClass.next((field.valid? 'valid' : 'not-valid'));
+            input.inputMessage.next(field.message);
+          });
+        break;
       }
-    })
+    });
   }
 
   ngOnInit(){
 
     //get saved sessionStorage data and check
     this.profileImage.next(window.sessionStorage.getItem('registerSavedProfileImage') ?? '');
+    
+    const usernameInput: RegisterInput = this.registerInputs.find((input) => (input as RegisterInput).name === 'username') as RegisterInput;
+    usernameInput.formControl.setValue(window.sessionStorage.getItem('registerSavedUsername') ?? '');
+    this.getAvailability('username', usernameInput.formControl);
 
-    this.username.setValue(window.sessionStorage.getItem('registerSavedUsername') ?? '');
-    this.getAvailability('username', this.username);
-
-    this.email.setValue(window.sessionStorage.getItem('registerSavedEmail') ?? '');
-    this.getAvailability('email', this.email);
+    const emailInput: RegisterInput = this.registerInputs.find((input) => (input as RegisterInput).name === 'email') as RegisterInput;
+    emailInput.formControl.setValue(window.sessionStorage.getItem('registerSavedEmail') ?? '');
+    this.getAvailability('email', emailInput.formControl);
   }
 
-  //handle register form
+  //register form components
   profileImage: Subject<string> = new Subject();
-  usernameInput: object = {
-    name: 'username', formControl: new FormControl('', [Validators.required, Validators.minLength(3)]), 
-  };
 
+  usernameInput: RegisterInput = {name: 'username', formControl: new FormControl('', [Validators.required, Validators.minLength(3)]), inputClass: new BehaviorSubject<string>(''), inputMessage: new BehaviorSubject<string>('')};
+  passwordInput: RegisterInput = {name: 'password', formControl: new FormControl('', [Validators.required]), inputClass: new BehaviorSubject<string>(''), inputMessage: new BehaviorSubject<string>('')};
+  emailInput: RegisterInput = {name: 'email', formControl: new FormControl('', [Validators.email, Validators.minLength(3)]), inputClass: new BehaviorSubject<string>(''), inputMessage: new BehaviorSubject<string>('')};
 
+  //combine all in array
+  registerInputs: Array<RegisterInput> = [this.usernameInput, this.passwordInput, this.emailInput];
 
-
-  username: FormControl = new FormControl('', [Validators.required, Validators.minLength(3)]);
-  password: FormControl = new FormControl('', [Validators.required]);
-  email: FormControl = new FormControl('', [Validators.email, Validators.minLength(3)]);
-  usernameInputClass: BehaviorSubject<string> = new BehaviorSubject('');
-  emailInputClass: BehaviorSubject<string> = new BehaviorSubject('');
-  usernameInputMessage: BehaviorSubject<string> = new BehaviorSubject('');
-  emailInputMessage: BehaviorSubject<string> = new BehaviorSubject('');
 
   imageSrc: string | null = '';
   isBrowser: boolean = false;
@@ -166,21 +159,22 @@ export class RegisterComponent {
 
     if(inputData.length === 0){
       if(isEmail)
-        this.emailInputClass.next('');
-      else this.usernameInputClass.next('');
+        this.emailInput.inputClass.next('');
+      else this.usernameInput.inputClass.next('');
 
       return;
     }
 
     //check client validators
-    if(isEmail && !this.email.valid){
-      this.emailInputClass.next('not-valid');
-      this.emailInputMessage.next('Please provide a valid email');
+    if(isEmail && !this.emailInput.formControl.valid){
+      this.emailInput.inputClass.next('not-valid');
+      console.log(this.emailInput.inputClass)
+      this.emailInput.inputMessage.next('Please provide a valid email');
       return;
     }
-    if(!isEmail && !this.username.valid){
-      this.usernameInputClass.next('not-valid');
-      this.usernameInputMessage.next('Minimum 3 characters in length');
+    if(!isEmail && !this.usernameInput.formControl.valid){
+      this.usernameInput.inputClass.next('not-valid');
+      this.usernameInput.inputMessage.next('Minimum 3 characters in length');
       return;
     }
     
@@ -190,8 +184,8 @@ export class RegisterComponent {
     
     //set classes
     if(isEmail)
-      this.emailInputClass.next('checking');
-    else this.usernameInputClass.next('checking');
+      this.emailInput.inputClass.next('checking');
+    else this.usernameInput.inputClass.next('checking');
 
     //interface for api response
     interface AvailabilityResponse {
@@ -209,9 +203,9 @@ export class RegisterComponent {
       console.log(response)
 
       if(isResponseTypeEmail)
-        this.emailInputClass.next(response.available? 'valid' : 'not-valid');
+        this.emailInput.inputClass.next(response.available? 'valid' : 'not-valid');
       else
-        this.usernameInputClass.next(response.available? 'valid' : 'not-valid');
+        this.usernameInput.inputClass.next(response.available? 'valid' : 'not-valid');
 
     })
   }
