@@ -7,21 +7,20 @@ import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { response } from 'express';
-import { RegisterComponent } from './register/register.component';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { RegisterFormResponse, RegisterFormService } from './register/classes';
 
 @Component({
   selector: 'login',
   imports: [RouterOutlet, ReactiveFormsModule, HttpClientModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
 })
 
 export class LoginComponent {
   
   constructor(private formService: FormService, private router: Router, private httpClient: HttpClient){
-    
-    //get child router form content via service
-    //formService.loginForm.subscribe((value) => console.log(value));
+
 
      //get router end-point
      this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event) => {
@@ -40,19 +39,10 @@ export class LoginComponent {
           this.isRegister = false; 
         break;
       }
-    })
-
-    //read register form every time it changes
-    interface RegisterForm {
-      profilePicture: string | null,
-      username: string,
-      password: string,
-      email: string | null
-    }
-    formService.registerForm.subscribe((content) => {
-      this.registerFormContent = content;
-    })
+    });
     
+    this.registerFormService = this.formService.registerFormService;
+    this.registerFormResponse = this.formService.registerFormResponse;
   }
 
   //switch header name
@@ -62,7 +52,8 @@ export class LoginComponent {
   isRegister: boolean = false;
 
   //register form object
-  registerFormContent: object = {};
+  registerFormService: BehaviorSubject<RegisterFormService | null>;
+  registerFormResponse: Subject<RegisterFormResponse | null>;
 
 
 
@@ -70,21 +61,23 @@ export class LoginComponent {
   submitButtonClick(){
     if(this.isRegister){
 
-      interface RegisterForm {
-        profilePicture: string | null,
-        username: string,
-        password: string,
-        email: string | null
+      //check if registerFormService is empty (null)
+      if(this.registerFormService.value === null){
+        this.registerFormResponse.next({
+          state: 'fail',
+          fields: null
+        });
+        return;
       }
 
+      //chreate user data to be send to sever
       const newUserData = {
-        image: (this.registerFormContent as RegisterForm).profilePicture,
-        username: (this.registerFormContent as RegisterForm).username,
-        password: (this.registerFormContent as RegisterForm).password,
-        email: (this.registerFormContent as RegisterForm).email
+        image: this.registerFormService.value.profileImage,
+        username: this.registerFormService.value.username,
+        password: this.registerFormService.value.password,
+        email: this.registerFormService.value.email
       }
       console.log(newUserData);
-      return;
       this.httpClient.post('/api/express/login/registerNewUser', {'userData': newUserData}).subscribe((response) => {
         null
       })

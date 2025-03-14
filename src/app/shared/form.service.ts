@@ -1,5 +1,7 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { RegisterFormResponse, RegisterFormService } from '../login/register/classes';
 
 @Injectable({
   providedIn: 'root'
@@ -16,23 +18,16 @@ export class FormService {
     this.loginFormSubject.next(loginFormData);
   }
 
-  //register
-  private registerFormSubject = new BehaviorSubject<object>({
-    profilePicture: '',
+  //register form
+  registerFormService = new BehaviorSubject<RegisterFormService | null>({
+    profileImage: '',
     username: '',
     password: '',
     email: ''
-  })
-  registerForm = this.registerFormSubject.asObservable();
-  registerFormChange(registerForm: object){
-    this.registerFormSubject.next(registerForm);
-  }
+  });
 
-  //handle parent (submit button click) response proxying
-  public registerSubmitResponse: Subject<object> = new Subject();
-  registerSubmitSetResponse(registerResponse: object){
-    this.registerSubmitResponse.next(registerResponse);
-  }
+  registerFormResponse = new Subject<RegisterFormResponse | null>();
 
   constructor() { }
 }
+

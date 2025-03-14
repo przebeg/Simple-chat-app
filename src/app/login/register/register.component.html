@@ -1,26 +1,27 @@
 @defer {
-    <div class="register-input profile-image" [class.dragging] = "isDraggingFile" (dragover)="onDragOver($event)" (dragleave)="onDragEnd($event)" (drop)="onFileDrop($event)">
+    <div class="register-input profile-image" [class.dragging] = "profileImage.isDraggingFile" (dragover)="profileImage.onDragOver($event)" (dragleave)="profileImage.onDragEnd($event)" (drop)="profileImage.onFileDrop($event)">
         <span class="small-text">Profile image (optional)</span>
-        <div id="profile-image-preview" [class.removable] = "profileImageRemovable" (click)="profileImageRemoveClick()" (mouseover)="profileImageMouseOver()" (mouseleave)="profileImageMouseLeave()" [style.backgroundImage]="'url(' + (imageSrc? imageSrc : 'assets/profile-image-placeholder.png') + ')'">
+        <div id="profile-image-preview" [class.removable] = "profileImage.profileImageRemovable" (click)="profileImage.removeClick()" (mouseover)="profileImage.mouseOver()" (mouseleave)="profileImage.mouseLeave()" [style.backgroundImage]="'url(' + (profileImage.image.value? profileImage.image.value : 'assets/profile-image-placeholder.png') + ')'">
             <div id="image-delete-overlay"></div>
             <span class="small-text link">Remove</span>
         </div>
-        <input type="file" accept="image/*" id="profile-image-input" (change)="onFileSelect($event)">
-        <span class="small-text">Drag image here or <span class="link" (click)="profileImageInputClick()">click here to select</span></span>
+        <input type="file" accept="image/*" id="profile-image-input" (change)="profileImage.onFileSelect($event)">
+        <span class="small-text">Drag image here or <span class="link" (click)="profileImage.inputClick()">click here to select</span></span>
     </div>
     <div class="register-input" [class.disabled] = "usernameInput.formControl.disabled">
-        <span class="small-text" [class] = "usernameInput.inputClass| async">Username</span>
-        <input type="text" required [formControl] = "usernameInput.formControl" (blur)="getAvailability('username', usernameInput.formControl)">
-        <span class="small-text message" [class] = "usernameInput.inputClass">{{usernameInput.inputMessage| async}}</span>
+        <span class="small-text" [class] = "usernameInput.inputClass">Username</span>
+        <input type="text" required [formControl] = "usernameInput.formControl" (blur)="usernameInput.getAvailability()">
+        <span class="small-text message" [class] = "usernameInput.inputClass">{{usernameInput.inputMessage}}</span>
     </div>
     <div class="register-input" [class.disabled] = "passwordInput.formControl.disabled">
-        <span class="small-text">Password</span>
-        <input type="password" autocomplete="false" required [formControl] = "passwordInput.formControl">
+        <span class="small-text" [class] = "passwordInput.inputClass">Password</span>
+        <input type="password" autocomplete="false" required [formControl] = "passwordInput.formControl" (blur)="passwordInput.getAvailability()">
+        <span class="small-text message" [class] = "passwordInput.inputClass">{{passwordInput.inputMessage}}</span>
     </div>
     <div class="register-input">
-        <span class="small-text" [class] = "emailInput.inputClass | async" [class.disabled] = "emailInput.formControl.disabled">Email (optional)</span>
-        <input type="email" autocomplete="email" [formControl] = "emailInput.formControl" (blur)="getAvailability('email', emailInput.formControl)">
-        <div class="small-text message" [class] = "emailInput.inputClass | async">{{emailInput.inputMessage | async}}</div>
+        <span class="small-text" [class] = "emailInput.inputClass" [class.disabled] = "emailInput.formControl.disabled">Email (optional)</span>
+        <input type="email" autocomplete="email" [formControl] = "emailInput.formControl" (blur)="emailInput.getAvailability()">
+        <div class="small-text message" [class] = "emailInput.inputClass">{{emailInput.inputMessage}}</div>
     </div>
     <span class="small-text" id="back-to-login-text"><a routerLink="/login/sign-in" class="link">Back to login</a></span>
 }
