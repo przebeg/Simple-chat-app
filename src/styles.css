@@ -1,8 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
+html{
+  overflow: hidden;
+}
 
 .big-button {
+    position: relative;
     background: linear-gradient(100deg, #FF31D9 0%, #F60947 50%, #6C00F5 100%);
     width: fit-content;
     padding: 16px;
@@ -10,6 +14,7 @@
     cursor: pointer;
     transition: filter .13s ease-in-out;
     background-repeat: no-repeat;
+    overflow: hidden;
   }
   
   .big-button:hover{
@@ -25,10 +30,37 @@
     font-size: 1.5rem;
     color: white;
     text-align: center;
+    transition: opacity 0.1s ease-in-out;
   }
 
-
-
+  .big-button.loading{
+    filter: brightness(0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: default;
+  }
+  .big-button.loading span{
+    opacity: 0;
+  }
+  .big-button::after{
+    margin-top: 100%;
+    transition: margin-top 0.1s ease-out;
+    position: absolute;
+    content: "";
+  }
+  .big-button.loading::after{
+    margin-top: 0%;
+    width: 30%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 5px solid;
+    border-color: rgba(221, 221, 240, 0);
+    border-right-color: white;
+    animation: spinner-d3wgkg 1s infinite linear;
+  }
 
   .small-text{
     font-family: "Noto Sans", serif;

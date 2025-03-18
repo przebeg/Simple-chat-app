@@ -5,7 +5,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpParams, HttpStatusCode } from '@angular/common/http';
 import { FormService } from '../../shared/form.service';
 import { BehaviorSubject, combineLatest, Observable, startWith, Subject } from 'rxjs';
-import { RegisterInput, RegisterFormService, ProfileImageInput, Fields, RegisterFormResponse} from './classes';
+import { RegisterInput, RegisterFormService, ProfileImageInput, Field, RegisterFormResponse} from './classes';
 
 @Component({
   selector: 'register-component',
@@ -45,6 +45,9 @@ export class RegisterComponent {
 
     //combine all in array
     this.registerInputs = [this.usernameInput, this.passwordInput, this.emailInput];
+
+    //add to registerFormService
+    formService.registerFormService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: this.emailInput});
     
     //on form change update formService
     combineLatest([
@@ -61,12 +64,8 @@ export class RegisterComponent {
         window.sessionStorage.setItem('registerSavedEmail', this.emailInput.formControl.value?? '');
       }
 
-      //on image change update html src if all are valid, else set service empty (null)
-      console.log(this.passwordInput.valid)
-      if(this.emailInput.valid && this.passwordInput.valid && this.emailInput.valid)
-        formService.registerFormService.next({profileImage: profileImage, username: username, password: password, email: email});
-      else
-        formService.registerFormService.next(null);
+      //on inputs change update inputs
+      //formService.registerFormService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: email});
     })
 
     //on profile image change update image src
@@ -77,14 +76,16 @@ export class RegisterComponent {
       switch((submitResponse as RegisterFormResponse).state){
 
         //on waiting disable all inputs and wait
-        case 'waiting': this.registerInputs.forEach((input: RegisterInput) => input.formControl.disable()); break;
+        case 'waiting': 
+        //this.registerInputs.forEach((input: RegisterInput) => input.formControl.disable()); 
+        break;
 
         //on fail set classes and messages accordingly
         case 'fail': 
           this.registerInputs.forEach((input: RegisterInput) => input.formControl.enable());
 
           if(submitResponse?.fields){
-            submitResponse.fields.forEach((field: Fields, fieldIndex: number) => {
+            submitResponse.fields.forEach((field: Field | undefined, fieldIndex: number) => {
              //TODO fields handling
               
             });

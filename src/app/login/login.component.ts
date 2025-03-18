@@ -8,7 +8,8 @@ import { filter } from 'rxjs/operators';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { response } from 'express';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { RegisterFormResponse, RegisterFormService } from './register/classes';
+import { Field, RegisterFormResponse, RegisterFormService } from './register/classes';
+import { FirstValueFromConfig } from 'rxjs/internal/firstValueFrom';
 
 @Component({
   selector: 'login',
@@ -52,34 +53,54 @@ export class LoginComponent {
   isRegister: boolean = false;
 
   //register form object
-  registerFormService: BehaviorSubject<RegisterFormService | null>;
-  registerFormResponse: Subject<RegisterFormResponse | null>;
+  registerFormService: BehaviorSubject<RegisterFormService>;
+  registerFormResponse: Subject<RegisterFormResponse>;
 
+  //input forms array
+  registerFields: Array<Field> | null = null;
 
+  //switch button to loading class
+  buttonLoading: boolean = false;
 
   //on submit button click
   submitButtonClick(){
+    if(this.buttonLoading)
+      return;
+
     if(this.isRegister){
 
-      //check if registerFormService is empty (null)
-      if(this.registerFormService.value === null){
-        this.registerFormResponse.next({
-          state: 'fail',
-          fields: null
-        });
+      
+      //get fields and check valid
+      const fields = new Array<Field | undefined>(
+        this.formService.registerFormService.value.username?.getField(),
+        this.formService.registerFormService.value.password?.getField(),
+        this.formService.registerFormService.value.email?.getField()
+      );
+
+      //if any of fields is not valid return
+      if(fields.findIndex(field => !field?.valid) >= 0)
         return;
+
+      //send response waiting
+      this.formService.registerFormResponse.next({
+        state: 'waiting',
+        fields: null
+      })
+
+      //set button loading
+      this.buttonLoading = true;
+
+
+      //create user data to be send to sever
+      const newUserData = {
+        image: this.registerFormService.value.profileImage?.image.value?? 'null',
+        username: this.registerFormService.value.username?.formControl.value,
+        password: this.registerFormService.value.password?.formControl.value,
+        email: this.registerFormService.value.email?.formControl.value
       }
 
-      //chreate user data to be send to sever
-      const newUserData = {
-        image: this.registerFormService.value.profileImage,
-        username: this.registerFormService.value.username,
-        password: this.registerFormService.value.password,
-        email: this.registerFormService.value.email
-      }
-      console.log(newUserData);
       this.httpClient.post('/api/express/login/registerNewUser', {'userData': newUserData}).subscribe((response) => {
-        null
+        console.log(response);
       })
     }
       

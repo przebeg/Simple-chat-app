@@ -18,8 +18,8 @@
         <input type="password" autocomplete="false" required [formControl] = "passwordInput.formControl" (blur)="passwordInput.getAvailability()">
         <span class="small-text message" [class] = "passwordInput.inputClass">{{passwordInput.inputMessage}}</span>
     </div>
-    <div class="register-input">
-        <span class="small-text" [class] = "emailInput.inputClass" [class.disabled] = "emailInput.formControl.disabled">Email (optional)</span>
+    <div class="register-input" [class.disabled] = "emailInput.formControl.disabled">
+        <span class="small-text" [class] = "emailInput.inputClass">Email (optional)</span>
         <input type="email" autocomplete="email" [formControl] = "emailInput.formControl" (blur)="emailInput.getAvailability()">
         <div class="small-text message" [class] = "emailInput.inputClass">{{emailInput.inputMessage}}</div>
     </div>

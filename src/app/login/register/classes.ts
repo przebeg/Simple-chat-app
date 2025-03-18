@@ -29,6 +29,14 @@ export class RegisterInput{
     this.formControl.valueChanges.subscribe(() => this.valid = false)
   }
 
+  public getField(): Field{
+    return {
+      name: this.name,
+      valid: this.valid,
+      message: (this.valid? null : (this.name === "email"? "Please provide a valid email" : 'Minimum 3 characters in length'))
+    }
+  }
+
   public getAvailability(){
 
     this.valid = false;
@@ -156,19 +164,19 @@ export class ProfileImageInput {
 }
 
 export interface RegisterFormService {
-  profileImage: string | null,
-  username: string,
-  password: string,
-  email: string
+  profileImage: ProfileImageInput | null,
+  username: RegisterInput | null,
+  password: RegisterInput| null,
+  email: RegisterInput | null
 }
 
-export interface Fields {
-    name: string,
-    valid: boolean,
-    message: string
+export interface Field {
+  name: string,
+  valid: boolean,
+  message: string | null
 }
 
 export interface RegisterFormResponse {
-    state: string //success, fail, waiting
-    fields: Array<Fields> | null
+  state: string //success, fail, waiting
+  fields: Array<Field | undefined> | null
 }

@@ -19,14 +19,14 @@ export class FormService {
   }
 
   //register form
-  registerFormService = new BehaviorSubject<RegisterFormService | null>({
-    profileImage: '',
-    username: '',
-    password: '',
-    email: ''
+  registerFormService = new BehaviorSubject<RegisterFormService>({
+    profileImage: null,
+    username: null,
+    password: null,
+    email: null
   });
 
-  registerFormResponse = new Subject<RegisterFormResponse | null>();
+  registerFormResponse = new Subject<RegisterFormResponse>();
 
   constructor() { }
 }
