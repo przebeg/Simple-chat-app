@@ -1,7 +1,7 @@
 import { afterNextRender, Component, Injectable } from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule, ValueChangeEvent} from '@angular/forms'
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { FormService } from '../../shared/form.service';
+import { LoginService } from '../services/login.service';
 import { RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 
@@ -25,7 +25,7 @@ export class SignInComponent {
   password: FormControl = new FormControl<string>('');
   rememberMe: FormControl = new FormControl<boolean>(false);
   
-  constructor(public formService: FormService){
+  constructor(public formService: LoginService){
 
     afterNextRender(() => {
 

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms'
 import { signInRoutes } from './login-component-routing.component';
 import { NavigationEnd, RouterOutlet } from '@angular/router';
-import { FormService } from '../shared/form.service';
+import { LoginService } from './services/login.service';
 import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -20,7 +20,7 @@ import { FirstValueFromConfig } from 'rxjs/internal/firstValueFrom';
 
 export class LoginComponent {
   
-  constructor(private formService: FormService, private router: Router, private httpClient: HttpClient){
+  constructor(private loginService: LoginService, private router: Router, private httpClient: HttpClient){
 
 
      //get router end-point
@@ -42,8 +42,8 @@ export class LoginComponent {
       }
     });
     
-    this.registerFormService = this.formService.registerFormService;
-    this.registerFormResponse = this.formService.registerFormResponse;
+    this.registerFormService = this.loginService.registerFormService;
+    this.registerFormResponse = this.loginService.registerFormResponse;
   }
 
   //switch header name
@@ -72,9 +72,9 @@ export class LoginComponent {
       
       //get fields and check valid
       const fields = new Array<Field | undefined>(
-        this.formService.registerFormService.value.username?.getField(),
-        this.formService.registerFormService.value.password?.getField(),
-        this.formService.registerFormService.value.email?.getField()
+        this.loginService.registerFormService.value.username?.getField(),
+        this.loginService.registerFormService.value.password?.getField(),
+        this.loginService.registerFormService.value.email?.getField()
       );
 
       //if any of fields is not valid return
@@ -82,7 +82,7 @@ export class LoginComponent {
         return;
 
       //send response waiting
-      this.formService.registerFormResponse.next({
+      this.loginService.registerFormResponse.next({
         state: 'waiting',
         fields: null
       })

@@ -1,11 +1,12 @@
 import { afterNextRender, Component, Inject, PLATFORM_ID, Renderer2, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser, JsonPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpParams, HttpStatusCode } from '@angular/common/http';
-import { FormService } from '../../shared/form.service';
+import { LoginService, RegisterFormControl, RegisterImageInput } from '../services/login.service';
 import { BehaviorSubject, combineLatest, Observable, startWith, Subject } from 'rxjs';
-import { RegisterInput, RegisterFormService, ProfileImageInput, Field, RegisterFormResponse} from './classes';
+import { RegisterInput, ProfileImageInput, Field, RegisterFormResponse} from './classes';
+import { Session } from 'inspector';
 
 @Component({
   selector: 'register-component',
@@ -16,99 +17,128 @@ import { RegisterInput, RegisterFormService, ProfileImageInput, Field, RegisterF
 })
 export class RegisterComponent {
 
-  profileImage: ProfileImageInput;
-  usernameInput: RegisterInput;
-  passwordInput: RegisterInput;
-  emailInput: RegisterInput;
+  // profileImage: ProfileImageInput;
 
-  registerInputs: Array<RegisterInput>;
+  // imageSrc: string | null = '';
+  // isBrowser: boolean = false;
 
-  imageSrc: string | null = '';
-  isBrowser: boolean = false;
+  // registerForm: FormGroup;
+  // registerInputs = 
 
 
-  constructor(private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object, private httpClient: HttpClient, private formService: FormService){
+  // constructor(private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object, private httpClient: HttpClient, private loginService: LoginService){
     
-    //provide access to HttpClient for RegisterInput
-    RegisterInput.httpClient = this.httpClient;
+  //   this.registerForm = loginService.registerForm;
 
-    //provide access to Renderer2 and platformId for ProfileImageInput
-    ProfileImageInput.renderer = this.renderer;
-    ProfileImageInput.isPlatformBrowser = isPlatformBrowser;
-    ProfileImageInput.platformId = this.platformId;
+  //   //provide access to HttpClient for RegisterInput
+  //   RegisterInput.httpClient = this.httpClient;
 
-    //create Register Inputs
-    this.profileImage = new ProfileImageInput();
-    this.usernameInput = new RegisterInput({name: 'username', formControlValidators: [Validators.required, Validators.minLength(3)]});
-    this.passwordInput = new RegisterInput({name: 'password', formControlValidators: [Validators.required, Validators.minLength(3)]});
-    this.emailInput = new RegisterInput({name: 'email', formControlValidators: [Validators.minLength(3), Validators.email]});
+  //   //provide access to Renderer2 and platformId for ProfileImageInput
+  //   ProfileImageInput.renderer = this.renderer;
+  //   ProfileImageInput.isPlatformBrowser = isPlatformBrowser;
+  //   ProfileImageInput.platformId = this.platformId;
 
-    //combine all in array
-    this.registerInputs = [this.usernameInput, this.passwordInput, this.emailInput];
+  //   //create Register Inputs
+  //   this.profileImage = new ProfileImageInput();
+  //   this.usernameInput = new RegisterInput({name: 'username', formControlValidators: [Validators.required, Validators.minLength(3)]});
+  //   this.passwordInput = new RegisterInput({name: 'password', formControlValidators: [Validators.required, Validators.minLength(3)]});
+  //   this.emailInput = new RegisterInput({name: 'email', formControlValidators: [Validators.minLength(3), Validators.email]});
 
-    //add to registerFormService
-    formService.registerFormService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: this.emailInput});
+  //   //combine all in array
+  //   this.registerInputs = [this.usernameInput, this.passwordInput, this.emailInput];
+
+  //   //add to registerloginService
+  //   loginService.registerloginService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: this.emailInput});
     
-    //on form change update formService
-    combineLatest([
-      this.profileImage.image,
-      this.usernameInput.formControl.valueChanges, 
-      this.passwordInput.formControl.valueChanges.pipe(startWith('')), 
-      this.emailInput.formControl.valueChanges
-    ]).subscribe(([profileImage, username, password, email]) => {
+  //   //on form change update loginService
+  //   combineLatest([
+  //     this.profileImage.image,
+  //     this.usernameInput.formControl.valueChanges, 
+  //     this.passwordInput.formControl.valueChanges.pipe(startWith('')), 
+  //     this.emailInput.formControl.valueChanges
+  //   ]).subscribe(([profileImage, username, password, email]) => {
 
-      //save to sessionStorage
-      if(isPlatformBrowser(platformId) && window){
-        window.sessionStorage.setItem('registerSavedProfileImage', this.profileImage.image.value?? '')
-        window.sessionStorage.setItem('registerSavedUsername', this.usernameInput.formControl.value?? '');
-        window.sessionStorage.setItem('registerSavedEmail', this.emailInput.formControl.value?? '');
-      }
+  //     //save to sessionStorage
+  //     if(isPlatformBrowser(platformId) && window){
+  //       window.sessionStorage.setItem('registerSavedProfileImage', this.profileImage.image.value?? '')
+  //       window.sessionStorage.setItem('registerSavedUsername', this.usernameInput.formControl.value?? '');
+  //       window.sessionStorage.setItem('registerSavedEmail', this.emailInput.formControl.value?? '');
+  //     }
 
-      //on inputs change update inputs
-      //formService.registerFormService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: email});
-    })
+  //     //on inputs change update inputs
+  //     //loginService.registerloginService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: email});
+  //   })
 
-    //on profile image change update image src
-    this.profileImage.image.subscribe((profileImageData) => this.imageSrc = profileImageData);
+  //   //on profile image change update image src
+  //   this.profileImage.image.subscribe((profileImageData) => this.imageSrc = profileImageData);
 
-    //listen for parent (submit button) response
-    this.formService.registerFormResponse.subscribe((submitResponse) => {
-      switch((submitResponse as RegisterFormResponse).state){
+  //   //listen for parent (submit button) response
+  //   this.loginService.registerFormResponse.subscribe((submitResponse) => {
+  //     switch((submitResponse as RegisterFormResponse).state){
 
-        //on waiting disable all inputs and wait
-        case 'waiting': 
-        //this.registerInputs.forEach((input: RegisterInput) => input.formControl.disable()); 
-        break;
+  //       //on waiting disable all inputs and wait
+  //       case 'waiting': 
+  //       //this.registerInputs.forEach((input: RegisterInput) => input.formControl.disable()); 
+  //       break;
 
-        //on fail set classes and messages accordingly
-        case 'fail': 
-          this.registerInputs.forEach((input: RegisterInput) => input.formControl.enable());
+  //       //on fail set classes and messages accordingly
+  //       case 'fail': 
+  //         this.registerInputs.forEach((input: RegisterInput) => input.formControl.enable());
 
-          if(submitResponse?.fields){
-            submitResponse.fields.forEach((field: Field | undefined, fieldIndex: number) => {
-             //TODO fields handling
+  //         if(submitResponse?.fields){
+  //           submitResponse.fields.forEach((field: Field | undefined, fieldIndex: number) => {
+  //            //TODO fields handling
               
-            });
-          }
-          else{
-            //TODO fields are empty (null)
-          }
-        break;
-      }
-    });
-  }
+  //           });
+  //         }
+  //         else{
+  //           //TODO fields are empty (null)
+  //         }
+  //       break;
+  //     }
+  //   });
+  // }
 
-  //get saved sessionStorage data and check
-  ngOnInit(){
-    if(isPlatformBrowser(this.platformId) && window){
-      this.profileImage.image.next(window.sessionStorage.getItem('registerSavedProfileImage') ?? '');
+
+  registerForm: FormGroup;
+  profileImageFormControl: RegisterImageInput;
+  usernameFormControl: RegisterFormControl;
+  passwordFormControl: RegisterFormControl;
+  emailFormControl: RegisterFormControl;
+
+  constructor (private loginService: LoginService, private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object) {
+    this.registerForm = this.loginService.registerForm;
     
-      this.usernameInput.formControl.setValue(window.sessionStorage.getItem('registerSavedUsername') ?? '');
-      this.usernameInput.getAvailability();
+    this.profileImageFormControl = this.registerForm.get('profileImage') as RegisterImageInput;
+    this.usernameFormControl = this.registerForm.get('username') as RegisterFormControl;
+    this.passwordFormControl = this.registerForm.get('password') as RegisterFormControl;
+    this.emailFormControl = this.registerForm.get('email') as RegisterFormControl;
 
-      this.emailInput.formControl.setValue(window.sessionStorage.getItem('registerSavedEmail') ?? '');
-      this.emailInput.getAvailability();
+    if(isPlatformBrowser(this.platformId) && window){
+      [this.usernameFormControl, this.emailFormControl].forEach(control => {
+        console.log(window.sessionStorage.getItem('registerSavedUsername'))
+        control.setValue(window.sessionStorage.getItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1))?? '');
+        this.loginService.getRegisterFormControlAvailability(control);
+      });
+      this.profileImageFormControl.imageData = window.sessionStorage.getItem('registerSavedProfileImage')?? '';
     }
+
+    [this.profileImageFormControl, this.usernameFormControl, this.emailFormControl].forEach(control => 
+      control.valueChanges.subscribe((value) => {
+        if(isPlatformBrowser(platformId) && window)
+          window.sessionStorage.setItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1), value)
+      })
+    )
   }
-  
+
+  imageInputClick(){
+    this.renderer.selectRootElement('#profile-image-input').click();
+  }
+
+  inputBlur(inputFormControl: RegisterFormControl){
+    this.loginService.getRegisterFormControlAvailability(inputFormControl)
+  }
+
+
+
 }

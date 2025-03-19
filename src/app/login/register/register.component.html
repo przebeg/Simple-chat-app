@@ -1,27 +1,27 @@
 @defer {
-    <div class="register-input profile-image" [class.dragging] = "profileImage.isDraggingFile" (dragover)="profileImage.onDragOver($event)" (dragleave)="profileImage.onDragEnd($event)" (drop)="profileImage.onFileDrop($event)">
+    <div class="register-input profile-image" [class.dragging] = "profileImageFormControl.isDraggingFile" (dragover)="profileImageFormControl.onDragOver($event)" (dragleave)="profileImageFormControl.onDragEnd($event)" (drop)="profileImageFormControl.onFileDrop($event)">
         <span class="small-text">Profile image (optional)</span>
-        <div id="profile-image-preview" [class.removable] = "profileImage.profileImageRemovable" (click)="profileImage.removeClick()" (mouseover)="profileImage.mouseOver()" (mouseleave)="profileImage.mouseLeave()" [style.backgroundImage]="'url(' + (profileImage.image.value? profileImage.image.value : 'assets/profile-image-placeholder.png') + ')'">
+        <div id="profile-image-preview" [class.removable] = "profileImageFormControl.profileImageRemovable" (click)="profileImageFormControl.removeClick()" (mouseover)="profileImageFormControl.mouseOver()" (mouseleave)="profileImageFormControl.mouseLeave()" [style.backgroundImage]="'url(' + (profileImageFormControl.imageData? profileImageFormControl.imageData : 'assets/profile-image-placeholder.png') + ')'">
             <div id="image-delete-overlay"></div>
             <span class="small-text link">Remove</span>
         </div>
-        <input type="file" accept="image/*" id="profile-image-input" (change)="profileImage.onFileSelect($event)">
-        <span class="small-text">Drag image here or <span class="link" (click)="profileImage.inputClick()">click here to select</span></span>
+        <input type="file" accept="image/*" id="profile-image-input" (change)="profileImageFormControl.onFileSelect($event)">
+        <span class="small-text">Drag image here or <span class="link" (click)="imageInputClick()">click here to select</span></span>
     </div>
-    <div class="register-input" [class.disabled] = "usernameInput.formControl.disabled">
-        <span class="small-text" [class] = "usernameInput.inputClass">Username</span>
-        <input type="text" required [formControl] = "usernameInput.formControl" (blur)="usernameInput.getAvailability()">
-        <span class="small-text message" [class] = "usernameInput.inputClass">{{usernameInput.inputMessage}}</span>
+    <div class="register-input" [class.disabled] = "usernameFormControl.disabled">
+        <span class="small-text" [class] = "usernameFormControl.inputClass">Username</span>
+        <input type="text" required name="username" [formControl] = "usernameFormControl" (blur)="inputBlur(usernameFormControl)">
+        <span class="small-text message" [class] = "usernameFormControl.inputClass">{{usernameFormControl.inputMessage}}</span>
     </div>
-    <div class="register-input" [class.disabled] = "passwordInput.formControl.disabled">
-        <span class="small-text" [class] = "passwordInput.inputClass">Password</span>
-        <input type="password" autocomplete="false" required [formControl] = "passwordInput.formControl" (blur)="passwordInput.getAvailability()">
-        <span class="small-text message" [class] = "passwordInput.inputClass">{{passwordInput.inputMessage}}</span>
+    <div class="register-input" [class.disabled] = "passwordFormControl.disabled">
+        <span class="small-text" [class] = "passwordFormControl.inputClass">Password</span>
+        <input type="password" name="password" autocomplete="false" required [formControl] = "passwordFormControl" (blur)="inputBlur(passwordFormControl)">
+        <span class="small-text message" [class] = "passwordFormControl.inputClass">{{passwordFormControl.inputMessage}}</span>
     </div>
-    <div class="register-input" [class.disabled] = "emailInput.formControl.disabled">
-        <span class="small-text" [class] = "emailInput.inputClass">Email (optional)</span>
-        <input type="email" autocomplete="email" [formControl] = "emailInput.formControl" (blur)="emailInput.getAvailability()">
-        <div class="small-text message" [class] = "emailInput.inputClass">{{emailInput.inputMessage}}</div>
+    <div class="register-input" [class.disabled] = "emailFormControl.disabled">
+        <span class="small-text" [class] = "emailFormControl.inputClass">Email (optional)</span>
+        <input type="email" name="email" autocomplete="email" [formControl] = "emailFormControl" (blur)="inputBlur(emailFormControl)">
+        <div class="small-text message" [class] = "emailFormControl.inputClass">{{emailFormControl.inputMessage}}</div>
     </div>
     <span class="small-text" id="back-to-login-text"><a routerLink="/login/sign-in" class="link">Back to login</a></span>
 }
