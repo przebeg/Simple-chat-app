@@ -116,11 +116,10 @@ export class RegisterComponent {
 
     if(isPlatformBrowser(this.platformId) && window){
       [this.usernameFormControl, this.emailFormControl].forEach(control => {
-        console.log(window.sessionStorage.getItem('registerSavedUsername'))
         control.setValue(window.sessionStorage.getItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1))?? '');
         this.loginService.getRegisterFormControlAvailability(control);
       });
-      this.profileImageFormControl.imageData = window.sessionStorage.getItem('registerSavedProfileImage')?? '';
+      this.profileImageFormControl.imageData.next(window.sessionStorage.getItem('registerSavedProfileImage')?? '');
     }
 
     [this.profileImageFormControl, this.usernameFormControl, this.emailFormControl].forEach(control => 
@@ -128,10 +127,17 @@ export class RegisterComponent {
         if(isPlatformBrowser(platformId) && window)
           window.sessionStorage.setItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1), value)
       })
-    )
+    );
+    this.profileImageFormControl.imageData.subscribe(value => {
+      if(isPlatformBrowser(platformId) && window)
+        window.sessionStorage.setItem('registerSavedProfileImage', value.toString())
+    });
   }
 
   imageInputClick(){
+    if(this.profileImageFormControl.disabled)
+      return;
+    
     this.renderer.selectRootElement('#profile-image-input').click();
   }
 

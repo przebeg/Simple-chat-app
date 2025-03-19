@@ -1,7 +1,7 @@
 @defer {
-    <div class="register-input profile-image" [class.dragging] = "profileImageFormControl.isDraggingFile" (dragover)="profileImageFormControl.onDragOver($event)" (dragleave)="profileImageFormControl.onDragEnd($event)" (drop)="profileImageFormControl.onFileDrop($event)">
+    <div class="register-input profile-image" [class.dragging] = "profileImageFormControl.isDraggingFile" [class.disabled] = "profileImageFormControl.disabled" (dragover)="profileImageFormControl.onDragOver($event)" (dragleave)="profileImageFormControl.onDragEnd($event)" (drop)="profileImageFormControl.onFileDrop($event)">
         <span class="small-text">Profile image (optional)</span>
-        <div id="profile-image-preview" [class.removable] = "profileImageFormControl.profileImageRemovable" (click)="profileImageFormControl.removeClick()" (mouseover)="profileImageFormControl.mouseOver()" (mouseleave)="profileImageFormControl.mouseLeave()" [style.backgroundImage]="'url(' + (profileImageFormControl.imageData? profileImageFormControl.imageData : 'assets/profile-image-placeholder.png') + ')'">
+        <div id="profile-image-preview" [class.removable] = "profileImageFormControl.profileImageRemovable" (click)="profileImageFormControl.removeClick()" (mouseover)="profileImageFormControl.mouseOver()" (mouseleave)="profileImageFormControl.mouseLeave()" [style.backgroundImage]="'url(' + (profileImageFormControl.imageData.value && profileImageFormControl.imageData.value.length > 3? profileImageFormControl.imageData.value : 'assets/profile-image-placeholder.png') + ')'">
             <div id="image-delete-overlay"></div>
             <span class="small-text link">Remove</span>
         </div>

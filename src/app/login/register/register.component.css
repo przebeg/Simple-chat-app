@@ -39,7 +39,7 @@
   padding-left: 0;
 }
 
-.register-input input{
+.register-input input, .register-input input:-webkit-autofill{
   margin-top: 8px;
   margin-bottom: 4px;
   font-family: "Noto Sans", serif;
@@ -94,6 +94,11 @@
   background-color: #312F2F;
   margin: 18px;
   border-radius: 15px;
+  transition: filter 0.1s ease-in;
+}
+
+.register-input.profile-image.disabled{
+  filter: brightness(0.5);
 }
 
 .register-input.profile-image input{

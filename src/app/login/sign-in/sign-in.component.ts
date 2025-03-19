@@ -48,9 +48,9 @@ export class SignInComponent {
     })
 
     //on form values change provide do formService
-    combineLatest([this.username.valueChanges, this.password.valueChanges]).subscribe(([username, password]) => {
-      this.formService.loginFormChange({username: username, password: password});
-    })
+    // combineLatest([this.username.valueChanges, this.password.valueChanges]).subscribe(([username, password]) => {
+    //   //this.formService.loginFormChange({username: username, password: password});
+    // })
    
   }
   

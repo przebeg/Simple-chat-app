@@ -3,6 +3,7 @@ import { Injectable, Directive, Renderer2 } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { RegisterFormResponse, RegisterFormService } from '../register/classes';
 import { AbstractControl, FormControl, FormControlName, FormGroup, Validators } from '@angular/forms';
+import { EventEmitter } from 'stream';
 
 @Injectable({
   providedIn: 'root'
@@ -10,29 +11,7 @@ import { AbstractControl, FormControl, FormControlName, FormGroup, Validators } 
 })
 export class LoginService {
 
-  //sign-in
-  private loginFormSubject = new BehaviorSubject<object>({
-    usernameOrEmail: '',
-    password: ''
-  });
-  loginForm = this.loginFormSubject.asObservable();
-  loginFormChange(loginFormData: object){
-    this.loginFormSubject.next(loginFormData);
-  }
-
-  //register form
-  registerFormService = new BehaviorSubject<RegisterFormService>({
-    profileImage: null,
-    username: null,
-    password: null,
-    email: null
-  });
-
-  registerFormResponse = new Subject<RegisterFormResponse>();
-
-
-
-
+  submitButtonClick = new Subject<any>();
 
   registerForm: FormGroup = new FormGroup({
     profileImage: new RegisterImageInput({name: 'profileImage'}),
@@ -41,7 +20,13 @@ export class LoginService {
     email: new RegisterFormControl({name: 'email', formValidators: [Validators.email, Validators.minLength(3)]})
   });
 
-  constructor(private httpClient: HttpClient) { }
+  constructor(private httpClient: HttpClient) {
+
+    //on submit button check for empty register inputs
+    this.submitButtonClick.subscribe((e) =>
+      Object.values(this.registerForm.controls).filter((control) => control instanceof RegisterFormControl).forEach((registerFormControl) => registerFormControl.checkEmpty())
+    );
+  }
 
   public getRegisterFormControlAvailability(registerFormControl: RegisterFormControl){
     registerFormControl.available = false;
@@ -76,6 +61,7 @@ export class LoginService {
     .subscribe(response => {
   
     const isResponseTypeEmail = response.inputType.toLowerCase() === 'email';
+    console.log(response)
   
     if(isResponseTypeEmail === (registerFormControl.name === 'email'))
       registerFormControl.setValid(response.available, response.message?? '');
@@ -98,6 +84,11 @@ export class RegisterFormControl extends FormControl {
     this.name = name;
   }
 
+  public checkEmpty() {
+    if(this.hasValidator(Validators.required) && this.value.length === 0)
+      this.setValid(false, "This field is required");
+  }
+
   public setValid(available: boolean = true, message?: string){
     this.available = available;
     this.inputClass = (this.available? 'valid' : 'not-valid')
@@ -109,7 +100,7 @@ export class RegisterFormControl extends FormControl {
 export class RegisterImageInput extends FormControl {
 
   name: string;
-  imageData: string = '';
+  imageData: BehaviorSubject<string>;
   isDraggingFile: boolean = false;
   profileImageRemovable: boolean = false;
   profileImageInputElement: HTMLElement | null = null;
@@ -118,20 +109,27 @@ export class RegisterImageInput extends FormControl {
     super();
 
     this.name = name;
+    this.imageData = new BehaviorSubject<string>('');
   }
 
   processFile(file: File){
+    if(this.disabled)
+      return;
+
     if(file){
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
-        this.imageData = reader.result as string;
+        this.imageData.next((reader.result?? '').toString())
       }
     }
   }
 
   //handle drag and drop functionality
   onDragOver(event: DragEvent){
+    if(this.disabled)
+      return;
+
     const target = event.target as HTMLElement;
     event.preventDefault();
     this.isDraggingFile = true;
@@ -139,11 +137,17 @@ export class RegisterImageInput extends FormControl {
   
   //handle on drag end
   onDragEnd(event: Event){
+    if(this.disabled)
+      return;
+
     event.preventDefault();
     this.isDraggingFile = false;
   }
 
   onFileDrop(event: DragEvent){
+    if(this.disabled)
+      return;
+
     event.preventDefault();
     const file = event.dataTransfer?.files[0];
     if(file && (file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/jpeg'))
@@ -152,23 +156,35 @@ export class RegisterImageInput extends FormControl {
   }
 
   onFileSelect(event: any){
+    if(this.disabled)
+      return;
+
     const file = event.target.files[0];
     this.processFile(file);
   }
 
   mouseOver(){
-    if(this.imageData)
+    if(this.disabled)
+      return;
+
+    if(this.imageData.value)
       this.profileImageRemovable = true;
   }
 
   mouseLeave(){
+    if(this.disabled)
+      return;
+
     if(this.profileImageRemovable)
       this.profileImageRemovable = false;
   }
 
   removeClick(){
+    if(this.disabled)
+      return;
+
     if(this.profileImageRemovable && this.imageData){
-      this.imageData = '';
+      this.imageData.next('');
       this.profileImageRemovable = false;
     }
   }
