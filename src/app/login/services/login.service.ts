@@ -65,7 +65,7 @@ export class LoginService {
   
     if(isResponseTypeEmail === (registerFormControl.name === 'email'))
       registerFormControl.setValid(response.available, response.message?? '');
-    else alert('RESPONSE TYPE AND INPUT TYPE NOT MATCH')
+    else console.error('RESPONSE TYPE AND INPUT TYPE NOT MATCH')
   
     });
   }
@@ -89,10 +89,15 @@ export class RegisterFormControl extends FormControl {
       this.setValid(false, "This field is required");
   }
 
-  public setValid(available: boolean = true, message?: string){
+  public setValid(available: boolean = true, message?: string) {
     this.available = available;
     this.inputClass = (this.available? 'valid' : 'not-valid')
     this.inputMessage = message?? '';
+  }
+
+  public setClear() {
+    this.inputClass = '';
+    this.inputMessage = '';
   }
 
 }
@@ -101,9 +106,6 @@ export class RegisterImageInput extends FormControl {
 
   name: string;
   imageData: BehaviorSubject<string>;
-  isDraggingFile: boolean = false;
-  profileImageRemovable: boolean = false;
-  profileImageInputElement: HTMLElement | null = null;
 
   constructor({name}: {name: string}) {
     super();
@@ -111,84 +113,5 @@ export class RegisterImageInput extends FormControl {
     this.name = name;
     this.imageData = new BehaviorSubject<string>('');
   }
-
-  processFile(file: File){
-    if(this.disabled)
-      return;
-
-    if(file){
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        this.imageData.next((reader.result?? '').toString())
-      }
-    }
-  }
-
-  //handle drag and drop functionality
-  onDragOver(event: DragEvent){
-    if(this.disabled)
-      return;
-
-    const target = event.target as HTMLElement;
-    event.preventDefault();
-    this.isDraggingFile = true;
-  }
-  
-  //handle on drag end
-  onDragEnd(event: Event){
-    if(this.disabled)
-      return;
-
-    event.preventDefault();
-    this.isDraggingFile = false;
-  }
-
-  onFileDrop(event: DragEvent){
-    if(this.disabled)
-      return;
-
-    event.preventDefault();
-    const file = event.dataTransfer?.files[0];
-    if(file && (file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/jpeg'))
-      this.processFile(file);
-    this.isDraggingFile = false;
-  }
-
-  onFileSelect(event: any){
-    if(this.disabled)
-      return;
-
-    const file = event.target.files[0];
-    this.processFile(file);
-  }
-
-  mouseOver(){
-    if(this.disabled)
-      return;
-
-    if(this.imageData.value)
-      this.profileImageRemovable = true;
-  }
-
-  mouseLeave(){
-    if(this.disabled)
-      return;
-
-    if(this.profileImageRemovable)
-      this.profileImageRemovable = false;
-  }
-
-  removeClick(){
-    if(this.disabled)
-      return;
-
-    if(this.profileImageRemovable && this.imageData){
-      this.imageData.next('');
-      this.profileImageRemovable = false;
-    }
-  }
-
-
 }
 

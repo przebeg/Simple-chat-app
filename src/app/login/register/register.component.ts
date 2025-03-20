@@ -17,88 +17,8 @@ import { Session } from 'inspector';
 })
 export class RegisterComponent {
 
-  // profileImage: ProfileImageInput;
-
-  // imageSrc: string | null = '';
-  // isBrowser: boolean = false;
-
-  // registerForm: FormGroup;
-  // registerInputs = 
-
-
-  // constructor(private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object, private httpClient: HttpClient, private loginService: LoginService){
-    
-  //   this.registerForm = loginService.registerForm;
-
-  //   //provide access to HttpClient for RegisterInput
-  //   RegisterInput.httpClient = this.httpClient;
-
-  //   //provide access to Renderer2 and platformId for ProfileImageInput
-  //   ProfileImageInput.renderer = this.renderer;
-  //   ProfileImageInput.isPlatformBrowser = isPlatformBrowser;
-  //   ProfileImageInput.platformId = this.platformId;
-
-  //   //create Register Inputs
-  //   this.profileImage = new ProfileImageInput();
-  //   this.usernameInput = new RegisterInput({name: 'username', formControlValidators: [Validators.required, Validators.minLength(3)]});
-  //   this.passwordInput = new RegisterInput({name: 'password', formControlValidators: [Validators.required, Validators.minLength(3)]});
-  //   this.emailInput = new RegisterInput({name: 'email', formControlValidators: [Validators.minLength(3), Validators.email]});
-
-  //   //combine all in array
-  //   this.registerInputs = [this.usernameInput, this.passwordInput, this.emailInput];
-
-  //   //add to registerloginService
-  //   loginService.registerloginService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: this.emailInput});
-    
-  //   //on form change update loginService
-  //   combineLatest([
-  //     this.profileImage.image,
-  //     this.usernameInput.formControl.valueChanges, 
-  //     this.passwordInput.formControl.valueChanges.pipe(startWith('')), 
-  //     this.emailInput.formControl.valueChanges
-  //   ]).subscribe(([profileImage, username, password, email]) => {
-
-  //     //save to sessionStorage
-  //     if(isPlatformBrowser(platformId) && window){
-  //       window.sessionStorage.setItem('registerSavedProfileImage', this.profileImage.image.value?? '')
-  //       window.sessionStorage.setItem('registerSavedUsername', this.usernameInput.formControl.value?? '');
-  //       window.sessionStorage.setItem('registerSavedEmail', this.emailInput.formControl.value?? '');
-  //     }
-
-  //     //on inputs change update inputs
-  //     //loginService.registerloginService.next({profileImage: this.profileImage, username: this.usernameInput, password: this.passwordInput, email: email});
-  //   })
-
-  //   //on profile image change update image src
-  //   this.profileImage.image.subscribe((profileImageData) => this.imageSrc = profileImageData);
-
-  //   //listen for parent (submit button) response
-  //   this.loginService.registerFormResponse.subscribe((submitResponse) => {
-  //     switch((submitResponse as RegisterFormResponse).state){
-
-  //       //on waiting disable all inputs and wait
-  //       case 'waiting': 
-  //       //this.registerInputs.forEach((input: RegisterInput) => input.formControl.disable()); 
-  //       break;
-
-  //       //on fail set classes and messages accordingly
-  //       case 'fail': 
-  //         this.registerInputs.forEach((input: RegisterInput) => input.formControl.enable());
-
-  //         if(submitResponse?.fields){
-  //           submitResponse.fields.forEach((field: Field | undefined, fieldIndex: number) => {
-  //            //TODO fields handling
-              
-  //           });
-  //         }
-  //         else{
-  //           //TODO fields are empty (null)
-  //         }
-  //       break;
-  //     }
-  //   });
-  // }
-
+  imageIsDraggingFile: boolean = false;
+  profileImageRemovable: boolean = false;
 
   registerForm: FormGroup;
   profileImageFormControl: RegisterImageInput;
@@ -122,15 +42,18 @@ export class RegisterComponent {
       this.profileImageFormControl.imageData.next(window.sessionStorage.getItem('registerSavedProfileImage')?? '');
     }
 
-    [this.profileImageFormControl, this.usernameFormControl, this.emailFormControl].forEach(control => 
+    [this.usernameFormControl, this.emailFormControl].forEach(control => 
       control.valueChanges.subscribe((value) => {
         if(isPlatformBrowser(platformId) && window)
-          window.sessionStorage.setItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1), value)
+          window.sessionStorage.setItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1), value);
+
+        if(!control.available)
+          control.setClear();
       })
     );
     this.profileImageFormControl.imageData.subscribe(value => {
       if(isPlatformBrowser(platformId) && window)
-        window.sessionStorage.setItem('registerSavedProfileImage', value.toString())
+        window.sessionStorage.setItem('registerSavedProfileImage', (value?? '').toString())
     });
   }
 
@@ -144,6 +67,88 @@ export class RegisterComponent {
   inputBlur(inputFormControl: RegisterFormControl){
     this.loginService.getRegisterFormControlAvailability(inputFormControl)
   }
+
+
+  //profileImage input functions
+
+  //process data after file drop/selection
+  processFile(file: File){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    if(file){
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        this.profileImageFormControl.imageData.next((reader.result?? '').toString())
+      }
+    }
+  }
+
+  //handle drag and drop functionality
+  onDragOver(event: DragEvent){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    const target = event.target as HTMLElement;
+    event.preventDefault();
+    this.imageIsDraggingFile = true;
+  }
+
+  //handle on drag end
+  onDragEnd(event: Event){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    event.preventDefault();
+    this.imageIsDraggingFile = false;
+  }
+
+  onFileDrop(event: DragEvent){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    event.preventDefault();
+    const file = event.dataTransfer?.files[0];
+    if(file && (file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/jpeg'))
+      this.processFile(file);
+    this.imageIsDraggingFile = false;
+  }
+
+  onFileSelect(event: any){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    const file = event.target.files[0];
+    this.processFile(file);
+  }
+
+  mouseOver(){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    if(this.profileImageFormControl.imageData.value)
+      this.profileImageRemovable = true;
+  }
+
+  mouseLeave(){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    if(this.profileImageRemovable)
+      this.profileImageRemovable = false;
+  }
+
+  removeClick(){
+    if(this.profileImageFormControl.disabled)
+      return;
+
+    if(this.profileImageRemovable && this.profileImageFormControl.imageData.value.length > 3){
+      this.profileImageFormControl.imageData.next('');
+      this.profileImageRemovable = false;
+    }
+  }
+
 
 
 

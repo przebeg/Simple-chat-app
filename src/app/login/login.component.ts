@@ -55,6 +55,7 @@ export class LoginComponent {
 
   //on submit button click
   submitButtonClick(){
+    
     if(this.buttonLoading)
       return;
 
@@ -77,7 +78,7 @@ export class LoginComponent {
           profileImage: (this.loginService.registerForm.get('profileImage') as RegisterImageInput).imageData.value?? '',
           username: (this.loginService.registerForm.get('username') as RegisterImageInput).value,
           password: (this.loginService.registerForm.get('password') as RegisterImageInput).value,
-          email: (this.loginService.registerForm.get('username') as RegisterImageInput).value?? ''
+          email: (this.loginService.registerForm.get('email') as RegisterImageInput).value?? ''
         }
 
         this.httpClient.post('/api/express/login/registerNewUser', {'userData': newUserData}).subscribe((response) => {

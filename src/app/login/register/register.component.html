@@ -1,11 +1,11 @@
 @defer {
-    <div class="register-input profile-image" [class.dragging] = "profileImageFormControl.isDraggingFile" [class.disabled] = "profileImageFormControl.disabled" (dragover)="profileImageFormControl.onDragOver($event)" (dragleave)="profileImageFormControl.onDragEnd($event)" (drop)="profileImageFormControl.onFileDrop($event)">
+    <div class="register-input profile-image" [class.dragging] = "imageIsDraggingFile" [class.disabled] = "profileImageFormControl.disabled" (dragover)="onDragOver($event)" (dragleave)="onDragEnd($event)" (drop)="onFileDrop($event)">
         <span class="small-text">Profile image (optional)</span>
-        <div id="profile-image-preview" [class.removable] = "profileImageFormControl.profileImageRemovable" (click)="profileImageFormControl.removeClick()" (mouseover)="profileImageFormControl.mouseOver()" (mouseleave)="profileImageFormControl.mouseLeave()" [style.backgroundImage]="'url(' + (profileImageFormControl.imageData.value && profileImageFormControl.imageData.value.length > 3? profileImageFormControl.imageData.value : 'assets/profile-image-placeholder.png') + ')'">
+        <div id="profile-image-preview" [class.removable] = "profileImageRemovable" (click)="removeClick()" (mouseover)="mouseOver()" (mouseleave)="mouseLeave()" [style.backgroundImage]="'url(' + (profileImageFormControl.imageData.value && profileImageFormControl.imageData.value.length > 3? profileImageFormControl.imageData.value : 'assets/profile-image-placeholder.png') + ')'">
             <div id="image-delete-overlay"></div>
             <span class="small-text link">Remove</span>
         </div>
-        <input type="file" accept="image/*" id="profile-image-input" (change)="profileImageFormControl.onFileSelect($event)">
+        <input type="file" accept="image/*" id="profile-image-input" (change)="onFileSelect($event)">
         <span class="small-text">Drag image here or <span class="link" (click)="imageInputClick()">click here to select</span></span>
     </div>
     <div class="register-input" [class.disabled] = "usernameFormControl.disabled">
