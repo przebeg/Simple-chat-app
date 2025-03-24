@@ -57,7 +57,7 @@ export class LoginService {
     registerFormControl.inputClass = 'checking';
   
     //get availability
-    this.httpClient.get<{status: HttpStatusCode | null, inputType: string, available: boolean, message: string}>('api/express/login/checkAvailability', {params})
+    this.httpClient.get<{status: HttpStatusCode | null, inputType: string, available: boolean, message: string}>('api/express/accounts/checkAvailability', {params})
     .subscribe(response => {
   
     const isResponseTypeEmail = response.inputType.toLowerCase() === 'email';
@@ -105,6 +105,7 @@ export class RegisterFormControl extends FormControl {
 export class RegisterImageInput extends FormControl {
 
   name: string;
+  imageFile: Blob = new Blob();
   imageData: BehaviorSubject<string>;
 
   constructor({name}: {name: string}) {

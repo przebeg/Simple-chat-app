@@ -5,7 +5,7 @@ import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { LoginService, RegisterFormControl, RegisterImageInput } from './services/login.service';
 import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { response } from 'express';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Field, RegisterFormResponse, RegisterFormService } from './register/classes';
@@ -74,14 +74,14 @@ export class LoginComponent {
         this.loginService.registerForm.disable();
 
         //create user data to be send to sever
-        const newUserData = {
-          profileImage: (this.loginService.registerForm.get('profileImage') as RegisterImageInput).imageData.value?? '',
-          username: (this.loginService.registerForm.get('username') as RegisterImageInput).value,
-          password: (this.loginService.registerForm.get('password') as RegisterImageInput).value,
-          email: (this.loginService.registerForm.get('email') as RegisterImageInput).value?? ''
+        const userData = {
+          profileImage: (this.loginService.registerForm.get('profileImage') as RegisterImageInput).imageData.value,
+          username: this.loginService.registerForm.get('username')?.value,
+          password: this.loginService.registerForm.get('password')?.value,
+          email: this.loginService.registerForm.get('email')?.value?? '',
         }
 
-        this.httpClient.post('/api/express/login/registerNewUser', {'userData': newUserData}).subscribe((response) => {
+        this.httpClient.post('/api/express/accounts/registerNewUser', {'userData': userData}).subscribe((response) => {
           console.log(response);
         })
       }
