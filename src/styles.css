@@ -84,6 +84,10 @@ html{
     color: white;
     text-align: center;
   }
+  .big-text.text-left,
+  .small-text.text-left{
+    text-align: left;
+  }
 
   .circular-loader{
     width: 56px;

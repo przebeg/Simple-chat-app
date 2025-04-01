@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { OptionsBarComponent } from './options-bar.component';
+import { MainPageComponent } from './main-page.component';
 
-describe('OptionsBarComponent', () => {
-  let component: OptionsBarComponent;
-  let fixture: ComponentFixture<OptionsBarComponent>;
+describe('MainPageComponent', () => {
+  let component: MainPageComponent;
+  let fixture: ComponentFixture<MainPageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [OptionsBarComponent]
+      imports: [MainPageComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(OptionsBarComponent);
+    fixture = TestBed.createComponent(MainPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

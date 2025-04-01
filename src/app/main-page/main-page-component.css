@@ -3,6 +3,8 @@
 :host {
   display: block;
   height: 100%;
+  width: 100%;
+  display: flex;
 }
 
 #options-bar{
@@ -123,4 +125,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#left-panel-wrapper{
+  width: 500px;
+  height: 100%;
+  background-color: #1F1D1D;
+  display: flex;
+  flex-direction: column;
+  flex-flow: column;
+  margin-left: 6px;
+}
+
+#left-panel-router-label-container {
+  width: 100%;
+}
+
+#left-panel-wrapper div{
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+#left-panel-router-wrapper {
+  width: 100%;
+  height: 100%;
 }

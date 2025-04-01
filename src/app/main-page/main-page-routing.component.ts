@@ -1,0 +1,9 @@
+import { Routes } from '@angular/router';
+import { MainPageComponent } from './main-page.component';
+import { FriendsPanelComponent } from './friends-panel/friends-panel.component';
+
+
+export const mainPageSidePanelRouter: Routes = [
+    {path: '', redirectTo: 'friends', pathMatch: 'full'},
+    {path: 'friends', component: FriendsPanelComponent}
+];
