@@ -1,12 +1,9 @@
-import { afterNextRender, Component, Inject, PLATFORM_ID, Renderer2, signal } from '@angular/core';
-import { CommonModule, isPlatformBrowser, JsonPipe } from '@angular/common';
+import {  Component, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule, HttpParams, HttpStatusCode } from '@angular/common/http';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 import { LoginService, RegisterFormControl, RegisterImageInput } from '../services/login.service';
-import { BehaviorSubject, combineLatest, Observable, startWith, Subject } from 'rxjs';
-import { RegisterInput, ProfileImageInput, Field, RegisterFormResponse} from './classes';
-import { Session } from 'inspector';
 
 @Component({
   selector: 'register-component',
@@ -26,7 +23,10 @@ export class RegisterComponent {
   passwordFormControl: RegisterFormControl;
   emailFormControl: RegisterFormControl;
 
+
   constructor (private loginService: LoginService, private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object) {
+
+    //define Register Forms
     this.registerForm = this.loginService.registerForm;
     
     this.profileImageFormControl = this.registerForm.get('profileImage') as RegisterImageInput;
@@ -34,14 +34,22 @@ export class RegisterComponent {
     this.passwordFormControl = this.registerForm.get('password') as RegisterFormControl;
     this.emailFormControl = this.registerForm.get('email') as RegisterFormControl;
 
+    //get saved register data
     if(isPlatformBrowser(this.platformId) && window){
       [this.usernameFormControl, this.emailFormControl].forEach(control => {
         control.setValue(window.sessionStorage.getItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1))?? '');
         this.loginService.getRegisterFormControlAvailability(control);
       });
       this.profileImageFormControl.imageData.next(window.sessionStorage.getItem('registerSavedProfileImage')?? '');
+
+      //get saved image's extension
+      const extMatch = this.profileImageFormControl.imageData.value.match(/^data:image\/([a-zA-Z]+);base64,/);
+      this.profileImageFormControl.extension = extMatch ? extMatch[1] : 'undefined';
+      if(this.profileImageFormControl.imageData.value.length > 10)
+        this.profileImageFormControl.imageFile = this.imageDatatoFile(this.profileImageFormControl.imageData.value)
     }
 
+    //on Register Inputs value change save to localStorage
     [this.usernameFormControl, this.emailFormControl].forEach(control => 
       control.valueChanges.subscribe((value) => {
         if(isPlatformBrowser(platformId) && window)
@@ -55,6 +63,22 @@ export class RegisterComponent {
       if(isPlatformBrowser(platformId) && window)
         window.sessionStorage.setItem('registerSavedProfileImage', (value?? '').toString())
     });
+  }
+
+  imageDatatoFile(imageData: string): File {
+    const mimeMatch = imageData.match(/^data:(image\/[a-zA-Z]+);base64,/);
+    if(!mimeMatch)
+      throw new Error('Incorrect image data')
+    
+    const mimeType = mimeMatch[1];
+
+    const byteString = atob(imageData.split(',')[1]);
+    const byteArray = new Uint8Array(byteString.length);
+
+    for (let i = 0; i < byteString.length; i++)
+      byteArray[i] = byteString.charCodeAt(i);
+
+    return new File([byteArray], 'profileImage', {type: mimeType})
   }
 
   imageInputClick(){
@@ -77,6 +101,7 @@ export class RegisterComponent {
       return;
 
     if(file){
+      this.profileImageFormControl.extension = file.name.split('.').at(-1)?? '';
       this.profileImageFormControl.imageFile = file;
       const reader = new FileReader();
       reader.readAsDataURL(file);

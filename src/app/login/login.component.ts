@@ -74,14 +74,16 @@ export class LoginComponent {
         this.loginService.registerForm.disable();
 
         //create user data to be send to sever
-        const userData = {
-          profileImage: (this.loginService.registerForm.get('profileImage') as RegisterImageInput).imageData.value,
-          username: this.loginService.registerForm.get('username')?.value,
-          password: this.loginService.registerForm.get('password')?.value,
-          email: this.loginService.registerForm.get('email')?.value?? '',
-        }
+        const profileImage: RegisterImageInput = (this.loginService.registerForm.get('profileImage') as RegisterImageInput);
+        const userData: FormData = new FormData();
+        userData.append('profileImage', new File([profileImage.imageFile], ['profileImage', profileImage.imageExtension].join('.')));
+        userData.append('userData', JSON.stringify({
+          'username': this.loginService.registerForm.get('username')?.value,
+          'password': this.loginService.registerForm.get('password')?.value,
+          'email': this.loginService.registerForm.get('email')?.value,
+        }));
 
-        this.httpClient.post('/api/express/accounts/registerNewUser', {'userData': userData}).subscribe((response) => {
+        this.httpClient.post('/api/express/accounts/registerNewUser', userData).subscribe((response) => {
           console.log(response);
         })
       }

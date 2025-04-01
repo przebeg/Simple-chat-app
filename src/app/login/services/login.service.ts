@@ -1,9 +1,7 @@
-import { HttpClient, HttpParams, HttpParamsOptions, HttpStatusCode } from '@angular/common/http';
-import { Injectable, Directive, Renderer2 } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { RegisterFormResponse, RegisterFormService } from '../register/classes';
-import { AbstractControl, FormControl, FormControlName, FormGroup, Validators } from '@angular/forms';
-import { EventEmitter } from 'stream';
+import { HttpClient, HttpParams, HttpStatusCode } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Injectable({
   providedIn: 'root'
@@ -107,12 +105,19 @@ export class RegisterImageInput extends FormControl {
   name: string;
   imageFile: Blob = new Blob();
   imageData: BehaviorSubject<string>;
+  imageExtension: string = '';
 
   constructor({name}: {name: string}) {
     super();
 
     this.name = name;
     this.imageData = new BehaviorSubject<string>('');
+  }
+
+  set extension(extension: string){
+    if(extension === 'png' || extension === 'jpg' || extension === 'jpeg')
+      this.imageExtension = extension;
+    else this.imageExtension = 'undefined'
   }
 }
 
