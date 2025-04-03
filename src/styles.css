@@ -78,6 +78,13 @@ html{
     cursor: pointer;
   }
 
+  .medium-text{
+    font-family: "Noto Sans", serif;
+    font-size: 1.2rem;
+    color: white;
+    text-align: center;
+  }
+
   .big-text{
     font-family: "Noto Sans", serif;
     font-size: 1.5rem;
@@ -107,5 +114,31 @@ html{
        transform: rotate(1turn);
     }
  }
+
+ .global-loading{
+  position: relative;
+  overflow-x: hidden;
+  box-shadow: 0px 0px 12px -3px rgba(0, 0, 0, 1);
+ }
+
+ .global-loading:before{
+  content: '';
+  background: linear-gradient(90deg, rgba(31,29,29,1) 20%, rgba(74,74,74,1) 50%, rgba(31,29,29,1) 70%);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: -80%;
+  animation: global-loading-bg 1.5s ease-in infinite;
+}
+
+
+ @keyframes global-loading-bg {
+  from{
+    left: -80%;
+  }
+  to{
+    left: 80%;
+  }
+}
 
 

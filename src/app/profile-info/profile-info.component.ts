@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'profile-info-component',
@@ -7,5 +8,12 @@ import { Component } from '@angular/core';
   styleUrl: './profile-info.component.css'
 })
 export class ProfileInfoComponent {
+
+  
+  isProfilePictureLoading: boolean = true;
+  constructor(private httpClient: HttpClient){
+    httpClient.get('api/express/user/friends/getFriendsList', {withCredentials: true}).subscribe(response => console.log(response));
+  }
+
 
 }

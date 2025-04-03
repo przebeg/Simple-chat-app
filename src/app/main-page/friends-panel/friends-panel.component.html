@@ -1,5 +1,15 @@
 <div id="friends-wrapper">
-    <div class="friend">
-        <img class="profile-image" [style.background-image]="'url(assets/profile-image-placeholder.png)'">
-    </div>
+    @defer{
+        <friend></friend>
+        <friend></friend>
+        <friend></friend>
+    }
+    @placeholder (minimum 1s) {
+        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+    }
 </div>
