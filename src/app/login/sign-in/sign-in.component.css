@@ -22,7 +22,7 @@
   flex-direction: column;
   flex-wrap: wrap;
   align-items: flex-start;
-
+  position: relative;
 }
 
 .sign-in-input input{
@@ -75,6 +75,73 @@
   position: relative;
   width: 100%;
   height: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign-in-input > :not(.message).checking::after{
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  text-align: center;
+  border: 2px solid #C1A4DF;
+  border-bottom-color: transparent;
+  animation: spinner-d3wgkg 1.5s infinite linear;
+  margin-left: 5px;
+}
+
+.sign-in-input > :not(.message).valid::after{
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 14px;
+  height: 14px;
+  background-color: green;
+  background-image: url('/assets/check.png');
+  background-size: 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+  text-align: center;
+  margin-left: 5px;
+}
+
+.sign-in-input > :not(.message).not-valid::after{
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 14px;
+  height: 14px;
+  background-color: red;
+  background-image: url('/assets/x-close.png');
+  background-size: 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+  text-align: center;
+  margin-left: 5px;
+}
+
+.sign-in-input .small-text.message{
+  display: flex;
+  justify-content: center;
+  visibility: hidden;
+  width: 88%;
+  position: absolute;
+  bottom: 0;
+}
+
+.sign-in-input .small-text.message.not-valid{
+  visibility: visible;
+  text-align: center;
+  color: #b00202;
+}
+
+.sign-in-input .small-text:first-of-type{
   display: flex;
   align-items: center;
   justify-content: center;

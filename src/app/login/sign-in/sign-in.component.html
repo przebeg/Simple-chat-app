@@ -1,16 +1,18 @@
 @defer {
     <div id="sign-in-form">
-        <div class="sign-in-input">
-            <span class="small-text">Username or email</span>
-            <input type="text" autocomplete="email" required [formControl]="username">
+        <div class="sign-in-input" [class.disabled] = "usernameEmailFormControl.disabled">
+            <span class="small-text" [class] = "usernameEmailFormControl.inputClass">Username or Email</span>
+            <input type="text" required name="username" [formControl] = "usernameEmailFormControl" (blur)="inputBlur(usernameEmailFormControl)">
+            <span class="small-text message" [class] = "usernameEmailFormControl.inputClass">{{usernameEmailFormControl.inputMessage}}</span>
         </div>
-        <div class="sign-in-input">
-            <span class="small-text">Password</span>
-            <input type="password" autocomplete="false" required [formControl]="password">
+        <div class="sign-in-input" [class.disabled] = "passwordFormControl.disabled">
+            <span class="small-text" [class] = "passwordFormControl.inputClass">Password</span>
+            <input type="password" required name="password" [formControl] = "passwordFormControl" (blur)="inputBlur(passwordFormControl)">
+            <span class="small-text message" [class] = "passwordFormControl.inputClass">{{passwordFormControl.inputMessage}}</span>
         </div>
         <div class="sign-in-input checkbox">
             <span class="small-text">Remember me</span>
-            <input type="checkbox" [formControl]="rememberMe">
+            <input type="checkbox">
         </div>
         <div id="sign-up-text-container">
             <span class="small-text" id="sign-up-text">Don't have an account? <a routerLink="/login/register" class="link">Sign up here</a></span>

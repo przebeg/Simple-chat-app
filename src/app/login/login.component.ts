@@ -5,12 +5,13 @@ import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { LoginService, RegisterFormControl, RegisterImageInput } from './services/login.service';
 import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders, HttpParams } from '@angular/common/http';
 import { response } from 'express';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Field, RegisterFormResponse, RegisterFormService } from './register/classes';
 import { FirstValueFromConfig } from 'rxjs/internal/firstValueFrom';
 import { EventEmitter } from 'stream';
+import { SignInLoginService } from './services/login.service';
 
 @Component({
   selector: 'login',
@@ -27,7 +28,7 @@ export class LoginComponent {
 
   private submitButtonTap = new Subject<any>();
   
-  constructor(private loginService: LoginService, private router: Router, private httpClient: HttpClient){
+  constructor(private loginService: LoginService, private signInLoginService: SignInLoginService, private router: Router, private httpClient: HttpClient){
 
     //on submit button tap check for register inputs emptyness
     
@@ -52,7 +53,6 @@ export class LoginComponent {
   
   }
 
-
   //on submit button click
   submitButtonClick(){
     
@@ -63,7 +63,7 @@ export class LoginComponent {
     if(this.isRegister){
 
       //emit click event to check for inputs emptyness
-      this.loginService.submitButtonClick.next(null);
+      this.loginService.submitButtonClick.next();
 
       if(this.loginService.registerForm.valid){
 
@@ -87,6 +87,30 @@ export class LoginComponent {
           console.log(response);
         })
       }
+    }
+
+    //for login
+    else {
+      if(this.buttonLoading)
+        return;
+      
+      //only error should now come from Validator.required, so check for input empty
+      this.signInLoginService.submitButtonClick.next();
+      
+      const signInForm: FormGroup = this.signInLoginService.signInForm;
+      
+      if(signInForm.valid){
+        this.buttonLoading = true;
+
+        const params = new HttpParams()
+          .set('credentials', JSON.stringify({usernameOrEmail: signInForm.get('usernameOrEmail')?.value, password: signInForm.get('password')?.value}));
+        
+        //make request
+        this.httpClient.get('api/express/accounts/sign-in', {params}).subscribe((response) => {
+          console.log(response)
+        })
+      }
+      
     }
   }
 }
