@@ -10,9 +10,8 @@ import { HttpClient } from '@angular/common/http';
 export class ProfileInfoComponent {
 
   
-  isProfilePictureLoading: boolean = true;
   constructor(private httpClient: HttpClient){
-    httpClient.get('api/express/user/friends/getFriendsList', {withCredentials: true}).subscribe(response => console.log(response));
+    //httpClient.get('api/express/user/friends/getFriendsList', {withCredentials: true}).subscribe(response => console.log(response));
   }
 
 

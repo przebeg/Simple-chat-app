@@ -1,8 +1,8 @@
 <div id="friend">
-    <div id="profile-image" [style.background-image]="'url(assets/profile-image-placeholder.png)'"></div>
+    <div id="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + friendData.id + ')'"></div>
     <div id="labels">
-        <span id="name" class="medium-text">Jakub Zwyrolowicz</span>
-        <span id="last-active" class="small-text">Last active 5m ago</span>
+        <span id="name" class="medium-text">{{friendData.username}}</span>
+        <span id="last-active" class="small-text"></span>
     </div>
     <div id="buttons">
         <div class="button" id="remove-friend">

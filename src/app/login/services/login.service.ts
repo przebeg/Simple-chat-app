@@ -2,11 +2,12 @@ import { HttpClient, HttpParams, HttpStatusCode } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { RegisterComponent } from '../register/register.component';
 
 @Injectable({
   providedIn: 'root'
 })
-export class LoginService {
+export class RegisterService {
 
   submitButtonClick = new Subject<void>();
 
@@ -130,7 +131,7 @@ export class SignInFormControl extends FormControl {
   }
 
   public setValid(valid: boolean = true, message?: string) {
-    this.inputClass = (this.valid? 'valid' : 'not-valid')
+    this.inputClass = (valid? 'valid' : 'not-valid')
     this.inputMessage = message?? '';
   }
 

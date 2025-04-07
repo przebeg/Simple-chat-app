@@ -1,7 +1,6 @@
 import { afterNextRender, Component, Injectable, Inject } from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValueChangeEvent} from '@angular/forms'
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { LoginService } from '../services/login.service';
 import { RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { SignInFormControl } from '../services/login.service';

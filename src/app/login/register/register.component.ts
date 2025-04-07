@@ -3,7 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { LoginService, RegisterFormControl, RegisterImageInput } from '../services/login.service';
+import { RegisterService, RegisterFormControl, RegisterImageInput } from '../services/login.service';
 
 @Component({
   selector: 'register-component',
@@ -24,10 +24,10 @@ export class RegisterComponent {
   emailFormControl: RegisterFormControl;
 
 
-  constructor (private loginService: LoginService, private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor (private registerService: RegisterService, private renderer: Renderer2, @Inject(PLATFORM_ID) private platformId: Object) {
 
     //define Register Forms
-    this.registerForm = this.loginService.registerForm;
+    this.registerForm = this.registerService.registerForm;
     
     this.profileImageFormControl = this.registerForm.get('profileImage') as RegisterImageInput;
     this.usernameFormControl = this.registerForm.get('username') as RegisterFormControl;
@@ -38,7 +38,7 @@ export class RegisterComponent {
     if(isPlatformBrowser(this.platformId) && window){
       [this.usernameFormControl, this.emailFormControl].forEach(control => {
         control.setValue(window.sessionStorage.getItem('registerSaved' + control.name[0].toUpperCase() + control.name.slice(1))?? '');
-        this.loginService.getRegisterFormControlAvailability(control);
+        this.registerService.getRegisterFormControlAvailability(control);
       });
       this.profileImageFormControl.imageData.next(window.sessionStorage.getItem('registerSavedProfileImage')?? '');
 
@@ -89,7 +89,7 @@ export class RegisterComponent {
   }
 
   inputBlur(inputFormControl: RegisterFormControl){
-    this.loginService.getRegisterFormControlAvailability(inputFormControl)
+    this.registerService.getRegisterFormControlAvailability(inputFormControl)
   }
 
 
@@ -172,6 +172,13 @@ export class RegisterComponent {
     if(this.profileImageRemovable && this.profileImageFormControl.imageData.value.length > 3){
       this.profileImageFormControl.imageData.next('');
       this.profileImageRemovable = false;
+    }
+  }
+
+  //clear session storage after successful register
+  clearSessionStorage() {
+    if(isPlatformBrowser(this.platformId) && window){
+      Object.keys(this.registerForm.controls).forEach(controlName => window.sessionStorage.setItem('registerSaved' + controlName, ''));
     }
   }
 

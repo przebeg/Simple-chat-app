@@ -2,7 +2,7 @@ import { Component, Input, Output } from '@angular/core';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms'
 import { signInRoutes } from './login-component-routing.component';
 import { NavigationEnd, RouterOutlet } from '@angular/router';
-import { LoginService, RegisterFormControl, RegisterImageInput } from './services/login.service';
+import { RegisterService, RegisterFormControl, RegisterImageInput, SignInFormControl } from './services/login.service';
 import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { HttpClient, HttpClientModule, HttpHeaders, HttpParams } from '@angular/common/http';
@@ -12,6 +12,7 @@ import { Field, RegisterFormResponse, RegisterFormService } from './register/cla
 import { FirstValueFromConfig } from 'rxjs/internal/firstValueFrom';
 import { EventEmitter } from 'stream';
 import { SignInLoginService } from './services/login.service';
+import { RegisterComponent } from './register/register.component';
 
 @Component({
   selector: 'login',
@@ -28,11 +29,10 @@ export class LoginComponent {
 
   private submitButtonTap = new Subject<any>();
   
-  constructor(private loginService: LoginService, private signInLoginService: SignInLoginService, private router: Router, private httpClient: HttpClient){
+  constructor(private registerService: RegisterService, private signInLoginService: SignInLoginService, private router: Router, private httpClient: HttpClient){
 
     //on submit button tap check for register inputs emptyness
     
-
      //get router end-point
      this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event) => {
       switch(event.url.split('/').at(-1)){
@@ -63,28 +63,34 @@ export class LoginComponent {
     if(this.isRegister){
 
       //emit click event to check for inputs emptyness
-      this.loginService.submitButtonClick.next();
+      this.registerService.submitButtonClick.next();
 
-      if(this.loginService.registerForm.valid){
+      if(this.registerService.registerForm.valid){
 
         //set button loading
         this.buttonLoading = true;
 
         //disable formGroup
-        this.loginService.registerForm.disable();
+        this.registerService.registerForm.disable();
 
         //create user data to be send to sever
-        const profileImage: RegisterImageInput = (this.loginService.registerForm.get('profileImage') as RegisterImageInput);
+        const profileImage: RegisterImageInput = (this.registerService.registerForm.get('profileImage') as RegisterImageInput);
         const userData: FormData = new FormData();
-        userData.append('profileImage', new File([profileImage.imageFile], ['profileImage', profileImage.imageExtension].join('.')));
+
+        if(profileImage.imageFile.size > 0)
+          userData.append('profileImage', new File([profileImage.imageFile], ['profileImage', profileImage.imageExtension].join('.')));
+        
         userData.append('userData', JSON.stringify({
-          'username': this.loginService.registerForm.get('username')?.value,
-          'password': this.loginService.registerForm.get('password')?.value,
-          'email': this.loginService.registerForm.get('email')?.value,
+          'username': this.registerService.registerForm.get('username')?.value,
+          'password': this.registerService.registerForm.get('password')?.value,
+          'email': this.registerService.registerForm.get('email')?.value,
         }));
 
-        this.httpClient.post('/api/express/accounts/registerNewUser', userData).subscribe((response) => {
-          console.log(response);
+        this.httpClient.post<{state: string, message: string}>('/api/express/accounts/registerNewUser', userData).subscribe((response) => {
+          if(response.state === 'success'){
+            //this.RegisterComponent.clearSessionStorage();
+            this.router.navigate(['/'])
+          }
         })
       }
     }
@@ -103,11 +109,22 @@ export class LoginComponent {
         this.buttonLoading = true;
 
         const params = new HttpParams()
-          .set('credentials', JSON.stringify({usernameOrEmail: signInForm.get('usernameOrEmail')?.value, password: signInForm.get('password')?.value}));
+          .set('credentials', JSON.stringify({usernameEmail: signInForm.get('usernameEmail')?.value, password: signInForm.get('password')?.value}));
         
         //make request
-        this.httpClient.get('api/express/accounts/sign-in', {params}).subscribe((response) => {
-          console.log(response)
+        this.httpClient.get<{state: string, message: string}>('api/express/accounts/sign-in', {params}).subscribe((response) => {
+          if(response.state === 'success'){
+            this.router.navigate(['/']);
+            return;
+          }
+          else{
+            if(response.message === 'wrong credentials'){
+              signInForm.enable();
+              this.buttonLoading = false;
+              (signInForm.get('usernameEmail') as SignInFormControl).setValid(false, 'Credentials don\'t match');
+              (signInForm.get('password') as SignInFormControl).setValid(false, 'Credentials don\'t match');
+            }
+          }
         })
       }
       
