@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { Friend } from '../friends-panel.component';
+import { Friend, FriendsPanelComponent } from '../friends-panel.component';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 @Component({
   selector: 'friend',
@@ -9,12 +10,39 @@ import { Friend } from '../friends-panel.component';
 })
 export class FriendComponent {
     
-  @Input() friendData: Friend = {id: '', active: false, username: '', lastActive: new Date};
+  @Input() friendData!: Friend;
 
-  //lastActiveString: string = Date.now() - this.friendData.lastActive.getTime();
+  lastActiveString: string = '';
 
-  constructor(){
-    console.log(Date.now())
+  constructor() {}
+
+  ngOnChanges(){
+    this.setLastActive();
   }
+
+  //set last activa small text
+  setLastActive() {
+
+    const timeDiff = Date.now() - new Date(this.friendData.lastActive).getTime();
+    
+    //if last active < 1m
+    if(timeDiff / 1000 < 60)
+      this.lastActiveString = 'Active Now';
+
+    //last active >1m && <1h
+    else if(timeDiff / (1000 * 60) < 60)
+      this.lastActiveString = `Last active ${Math.floor(timeDiff / (1000 * 60))} min ago`;
+
+    //last active <1d && >1h
+    else if(timeDiff / (1000 * 60 * 60) < 24)
+      this.lastActiveString = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60))}h ago`;
+
+    //last active >1d
+    else if(timeDiff / (1000 * 60 * 24) >= 24)
+      this.lastActiveString = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60 * 24))}d ago`;
+
+  }
+
+  
 
 }

@@ -2,7 +2,7 @@
     <div id="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + friendData.id + ')'"></div>
     <div id="labels">
         <span id="name" class="medium-text">{{friendData.username}}</span>
-        <span id="last-active" class="small-text"></span>
+        <span id="last-active" class="small-text">{{lastActiveString}}</span>
     </div>
     <div id="buttons">
         <div class="button" id="remove-friend">

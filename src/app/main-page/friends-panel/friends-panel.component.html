@@ -1,8 +1,11 @@
 <div id="friends-wrapper">
     @defer{
-        @for(friend of friends; track friend){
-          <friend [friendData]="friend"></friend>
+        @if(firendsAcquired){
+            @for(friend of friends; track friend){
+                <friend [friendData]="friend"></friend>
+            }
         }
+        
     }
     @placeholder (minimum 1s) {
         <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
