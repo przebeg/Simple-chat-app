@@ -1,0 +1,28 @@
+<div id="friend-wrapper">
+    <input [formControl]="searchBarFormControl" id="search-bar" type="text" placeholder="Search for users">
+    <div id="results-wrapper">
+        @if(searchInProgress){
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        }
+        @else{
+            @for(user of searchResults; track user){
+                <div class="result">
+                    <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
+                    <div class="labels">
+                        <span class="name medium-text">{{user.username}}</span>
+                    </div>
+                    <div class="buttons-wrapper">
+                        <div class="button add-user">
+                            <div class="button-icon"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

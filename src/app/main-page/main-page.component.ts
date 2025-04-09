@@ -11,10 +11,7 @@ import { RouterOutlet } from '@angular/router';
 })
 export class MainPageComponent {
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object){
-
-    
-  }
+  leftPanelTitle: string = 'Search'
 
 
   

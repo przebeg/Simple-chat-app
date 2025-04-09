@@ -1,5 +1,5 @@
 <div id="friend">
-    <div id="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + friendData.id + ')'"></div>
+    <div id="profile-image" [class.active-now]="activeNow" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + friendData.id + '), url(/assets/profile-image-placeholder.png)'"></div>
     <div id="labels">
         <span id="name" class="medium-text">{{friendData.username}}</span>
         <span id="last-active" class="small-text">{{lastActiveString}}</span>

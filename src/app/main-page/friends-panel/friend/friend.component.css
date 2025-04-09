@@ -80,3 +80,19 @@
 #buttons #send-message .button-icon{
   background-image: url('/assets/send-message.png');
 }
+#friend #profile-image {
+  position: relative;
+}
+
+#friend #profile-image.active-now::after{
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: auto;
+  aspect-ratio: 1;
+  background-color: #28db14;
+  right: 0;
+  bottom: -4px;
+  border-radius: 50%;
+
+}

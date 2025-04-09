@@ -13,21 +13,25 @@ export class FriendComponent {
   @Input() friendData!: Friend;
 
   lastActiveString: string = '';
+  activeNow: boolean = false;
 
   constructor() {}
 
   ngOnChanges(){
-    this.setLastActive();
+    this.updateLastActive();
   }
 
   //set last activa small text
-  setLastActive() {
+  updateLastActive() {
 
     const timeDiff = Date.now() - new Date(this.friendData.lastActive).getTime();
-    
+    this.activeNow = false;
+
     //if last active < 1m
-    if(timeDiff / 1000 < 60)
+    if(timeDiff / 1000 < 60){
       this.lastActiveString = 'Active Now';
+      this.activeNow = true;
+    }
 
     //last active >1m && <1h
     else if(timeDiff / (1000 * 60) < 60)
@@ -42,7 +46,4 @@ export class FriendComponent {
       this.lastActiveString = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60 * 24))}d ago`;
 
   }
-
-  
-
 }

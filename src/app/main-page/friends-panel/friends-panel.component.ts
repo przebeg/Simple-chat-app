@@ -19,6 +19,8 @@ export class FriendsPanelComponent {
   friends: Array<Friend> = [];
 
   constructor(private httpClient: HttpClient) {
+
+    //get friends list
     httpClient.get<{state: string, friendsCount: number, friends: Array<Friend>}>('api/express/user/friends/getFriendsList', {withCredentials: true}).subscribe(response => {
       if(response.state === 'success'){
         this.firendsAcquired = true;
