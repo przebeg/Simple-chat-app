@@ -1,25 +1,29 @@
-<div id="friend-wrapper">
+<div id="search-wrapper">
     <input [formControl]="searchBarFormControl" id="search-bar" type="text" placeholder="Search for users">
-    <div id="results-wrapper">
+    <div id="results-wrapper" [class.placeholder] = "isPlaceholder" [class]="placeholderClass">
         @if(searchInProgress){
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            @for(n of placeholdersCount; track n){
+                <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+            }
         }
         @else{
             @for(user of searchResults; track user){
-                <div class="result">
+                <div class="user-element search-user-element">
                     <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
                     <div class="labels">
                         <span class="name medium-text">{{user.username}}</span>
+                        <span class="message small-text">{{user.message}}</span>
                     </div>
                     <div class="buttons-wrapper">
-                        <div class="button add-user">
-                            <div class="button-icon"></div>
-                        </div>
+                        @switch (user.buttonsType) {
+                            @case ('add-friend') {<div class="small-button add-friend" [class.loading]="user.buttonLoading" (click)="sendFriendRequest(user.id)"></div>}
+                            @case ('is-friend') {<div class="small-button is-friend"></div>}
+                            @case ('request-outgoing') {<div class="small-button request-outgoing"></div>}
+                            @case ('request-incoming') {
+                                <div class="small-button request-decline"></div>
+                                <div class="small-button request-accept"></div>
+                            }
+                        }
                     </div>
                 </div>
             }

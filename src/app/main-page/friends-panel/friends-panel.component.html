@@ -1,18 +1,22 @@
 <div id="friends-wrapper">
-    @defer{
-        @if(firendsAcquired){
-            @for(friend of friends; track friend){
-                <friend [friendData]="friend"></friend>
-            }
-        }
-        
+    @if(firendsAcquired){
+        @for(user of friends; track user){
+            <div class="user-element friend-user-element">
+                <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
+                <div class="labels">
+                    <span class="name medium-text">{{user.username}}</span>
+                    <span class="message small-text">{{user.message}}</span>
+                </div>
+                <div class="buttons-wrapper">
+                    <div class="small-button remove-friend"></div>
+                    <div class="small-button send-message"></div>
+                </div>
+            </div>
+         }
     }
-    @placeholder (minimum 1s) {
-        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
-        <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+    @else {
+        @for(n of placeholdersCount; track n){
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        }
     }
 </div>

@@ -171,6 +171,7 @@ export class RegisterComponent {
 
     if(this.profileImageRemovable && this.profileImageFormControl.imageData.value.length > 3){
       this.profileImageFormControl.imageData.next('');
+      console.log(this.profileImageFormControl.imageData.value)
       this.profileImageRemovable = false;
     }
   }

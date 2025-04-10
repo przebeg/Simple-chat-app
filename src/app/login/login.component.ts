@@ -77,7 +77,7 @@ export class LoginComponent {
         const profileImage: RegisterImageInput = (this.registerService.registerForm.get('profileImage') as RegisterImageInput);
         const userData: FormData = new FormData();
 
-        if(profileImage.imageFile.size > 0)
+        if(profileImage.imageData.value.length > 0)
           userData.append('profileImage', new File([profileImage.imageFile], ['profileImage', profileImage.imageExtension].join('.')));
         
         userData.append('userData', JSON.stringify({
@@ -85,7 +85,7 @@ export class LoginComponent {
           'password': this.registerService.registerForm.get('password')?.value,
           'email': this.registerService.registerForm.get('email')?.value,
         }));
-
+        
         this.httpClient.post<{state: string, message: string}>('/api/express/accounts/registerNewUser', userData).subscribe((response) => {
           if(response.state === 'success'){
             //this.RegisterComponent.clearSessionStorage();
