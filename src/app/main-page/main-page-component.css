@@ -54,6 +54,8 @@
   width: 100%;
   max-width: 40px;
   height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 #options-bar-icons-wrapper .option-icon span{

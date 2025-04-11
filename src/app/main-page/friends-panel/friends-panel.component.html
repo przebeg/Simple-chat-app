@@ -1,7 +1,30 @@
-<div id="friends-wrapper">
-    @if(firendsAcquired){
+<div id="friends-wrapper" [class.placeholder]="friends.length === 0 && friendsRequests.length === 0 && !friendsLoadingInProgress">
+    @if(friendsLoadingInProgress){
+        @for(n of placeholdersCount; track n){
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        }
+    }
+    @else {
+        @if(friendsRequests.length > 0){
+            <b class="medium-text text-left" style="width: 100%;">Friend requests</b>
+            @for(user of friendsRequests; track user){
+                <div class="user-element friend-request-element">
+                    <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
+                    <div class="labels">
+                        <span class="name medium-text">{{user.username}}</span>
+                        <span class="message small-text">Wants to become your friend!</span>
+                    </div>
+                    <div class="buttons-wrapper">
+                        <div class="small-button request-decline" [class.disabled]="user.buttons.reject.disabled" [class.loading]="user.buttons.reject.loading" (click)="declineFriendRequest(user)"></div>
+                        <div class="small-button request-accept" [class.disabled]="user.buttons.accept.disabled" [class.loading]="user.buttons.accept.loading" (click)="acceptFriendRequest(user)"></div>
+                    </div>
+                </div>
+            }
+            <div class="global-horizontal-divider"></div>
+            <b class="medium-text text-left" style="width: 100%;">Friends</b>
+        }
         @for(user of friends; track user){
-            <div class="user-element friend-user-element">
+            <div class="user-element friend-user-element active-now" [class.active-now]="user.activeNow">
                 <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
                 <div class="labels">
                     <span class="name medium-text">{{user.username}}</span>
@@ -12,11 +35,6 @@
                     <div class="small-button send-message"></div>
                 </div>
             </div>
-         }
-    }
-    @else {
-        @for(n of placeholdersCount; track n){
-            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
         }
     }
 </div>

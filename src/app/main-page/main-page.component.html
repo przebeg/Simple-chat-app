@@ -5,14 +5,14 @@
             <img src="assets/options-bar-icons/chat-icon.png" alt="Chats Icon">
             <span>Chats</span>
         </div>
-        <div class="option-icon">
+        <a [routerLink]="'/friends'"><div class="option-icon">
             <img src="assets/options-bar-icons/friends.png" alt="Friends Icon">
             <span>Friends</span>
-        </div>
-        <div class="option-icon">
+        </div></a>
+        <a [routerLink]="'/search'"><div class="option-icon">
             <img src="assets/options-bar-icons/search.svg" alt="Search Icon">
             <span>Search</span>
-        </div>
+        </div></a>
     </div>
     <div id="profile-info-wrapper">
         <profile-info-component />

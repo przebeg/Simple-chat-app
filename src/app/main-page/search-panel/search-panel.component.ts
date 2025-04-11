@@ -97,8 +97,14 @@ export class SearchPanelComponent {
     resultSubject.buttonLoading = true;
 
     //send sendFriendRequest request
-    this.httpClient.get<{state: string, message: string}>('api/express/user/friends/sendFriendRequest', {withCredentials: true, params: new HttpParams().set('userId', resultSubject.id)}).pipe(delayWhen(() => timer(200))).subscribe(response => {
-      console.log(response);
+    this.httpClient.get<{state: string, message: string}>('api/express/user/friends/sendFriendRequest', {withCredentials: true, params: new HttpParams().set('userId', resultSubject.id)}).subscribe(response => {
+      if(response.state === 'success'){
+        resultSubject.buttonsType = 'request-outgoing';
+        resultSubject.buttonLoading = false;
+        resultSubject.message = 'Friend request sent!';
+      }
+      else
+        resultSubject.buttonLoading = false;
     })
   }
 

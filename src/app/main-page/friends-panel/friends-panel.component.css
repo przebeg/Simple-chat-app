@@ -11,3 +11,65 @@
   flex-direction: column;
   gap: 8px;
 }
+
+#friends-wrapper.placeholder{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#friends-wrapper.placeholder::before{
+  content: '';
+  background-image: url('/assets/not-found-friend.png');
+  aspect-ratio: 1;
+  background-size: cover;
+  background-position: center center;
+  width: 80px;
+  height: auto;
+  filter: opacity(.2);
+}
+
+#friends-wrapper.placeholder::after{
+  content: 'This list is empty';
+  font-family: "Noto Sans", serif;
+  font-size: 1.2rem;
+  color: white;
+  text-align: center;
+  filter: opacity(.2);
+}
+
+
+.user-element.friend-request-element .buttons-wrapper .small-button.request-decline{
+  background-image: url('/assets/friends/remove-friend.png');
+}
+.user-element.friend-request-element .buttons-wrapper .small-button.request-accept{
+  background-image: url('/assets/accept-invitation.png');
+}
+
+.user-element.friend-user-element .remove-friend{
+  background-image: url('/assets/friends/remove-friend.png');
+}
+
+.user-element.friend-user-element .send-message{
+  background-image: url('/assets/send-message.png');
+}
+.user-element.friend-user-element .profile-image {
+  position: relative;
+}
+
+.user-element.friend-user-element.active-now .profile-image::after{
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: auto;
+  aspect-ratio: 1;
+  background-color: #28db14;
+  right: 0;
+  bottom: -4px;
+  border-radius: 50%;
+
+}
