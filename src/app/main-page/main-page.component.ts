@@ -18,7 +18,7 @@ export class MainPageComponent {
 
     //on router navigation get and set left panel title
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
-      this.leftPanelTitle = event.url.split('/')[1];
+      this.leftPanelTitle = event.urlAfterRedirects.split('/')[1];
       this.leftPanelTitle = this.leftPanelTitle.replace(this.leftPanelTitle[0], this.leftPanelTitle[0].toUpperCase())
     });
   };

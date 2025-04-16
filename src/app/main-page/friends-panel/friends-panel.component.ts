@@ -15,7 +15,7 @@ export class FriendsPanelComponent {
   placeholdersCount: Array<number> = new Array(6);
   
   friendsLoadingInProgress: boolean = true;
-  friends: Array<Friend> = [];
+  friends: Array<FriendComponentData> = [];
   friendsRequests: Array<FriendRequestComponentData> = [];
 
   constructor(private httpClient: HttpClient) {
@@ -35,7 +35,13 @@ export class FriendsPanelComponent {
     this.httpClient.get<{state: string, friendsCount: number, friends: Array<Friend>, incomingFriendsRequests: Array<FriendRequest>}>('api/express/user/friends/getFriendsList', {withCredentials: true}).subscribe(response => {
       if(response.state === 'success'){
 
-        this.friends = response.friends;
+        //convert Friends to FriendComponentData
+        this.friends = response.friends.map(friend => {return({
+          ...friend,
+          buttonsDisabled: false,
+          actionInProgress: false,
+          removeFreidnButtonLoading: false
+        })});
         this.friends.forEach(friend => this.setLastActiveMessage(friend));
 
         //make Component data of FriendRequest
@@ -134,6 +140,31 @@ export class FriendsPanelComponent {
       }
     });
   }
+
+  //remove friend
+  removeFriend(friend: FriendComponentData) {
+    if(friend.actionInProgress)
+      return;
+
+    friend.actionInProgress = true;
+    friend.removeFreidnButtonLoading = true;
+    friend.buttonsDisabled = true;
+
+    //remove friend http request
+    this.httpClient.delete<{state: string, message: string}>('api/express/user/friends/removeFriend', {withCredentials: true, params: new HttpParams().set('friendUserId', friend.id)}).subscribe(response => {
+      if(response.state === 'success'){
+        console.log('x')
+        //on response success refresh friends list
+        this.getFriendsAndRequests();
+      }
+      else{
+        friend.actionInProgress = false;
+        friend.removeFreidnButtonLoading = false;
+        friend.buttonsDisabled = false;
+      }
+    });
+
+  }
 }
 
 interface Friend {
@@ -142,7 +173,13 @@ interface Friend {
   username: string,
   message: string,
   activeNow: boolean,
-  lastActive: Date
+  lastActive: Date,
+}
+
+interface FriendComponentData extends Friend {
+  buttonsDisabled: boolean,
+  actionInProgress: boolean,
+  removeFreidnButtonLoading: boolean
 }
 
 interface FriendRequest {

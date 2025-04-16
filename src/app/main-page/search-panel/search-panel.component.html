@@ -16,12 +16,12 @@
                     </div>
                     <div class="buttons-wrapper">
                         @switch (user.buttonsType) {
-                            @case ('add-friend') {<div class="small-button add-friend" [class.loading]="user.buttonLoading" (click)="sendFriendRequest(user.id)"></div>}
+                            @case ('add-friend') {<div class="small-button add-friend" [class.disabled]="user.actionInProgress" [class.loading]="user.buttons.sendRequest.loading" (click)="sendFriendRequest(user)"></div>}
                             @case ('is-friend') {<div class="small-button is-friend"></div>}
-                            @case ('request-outgoing') {<div class="small-button request-outgoing"></div>}
+                            @case ('request-outgoing') {}
                             @case ('request-incoming') {
-                                <div class="small-button request-decline"></div>
-                                <div class="small-button request-accept"></div>
+                                <div class="small-button request-decline" [class.disabled]="user.actionInProgress" [class.loading]="user.buttons.decline.loading" (click)="declineFriendRequest(user)"></div>
+                                <div class="small-button request-accept" [class.disabled]="user.actionInProgress" [class.loading]="user.buttons.accept.loading" (click)="acceptFriendRequest(user)"></div>
                             }
                         }
                     </div>

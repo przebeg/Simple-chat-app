@@ -21,42 +21,42 @@ export class SearchPanelComponent {
   isPlaceholder: boolean = true;
   placeholderClass: string = 'empty'
 
-  constructor (private httpClient: HttpClient, private renderer: Renderer2) {
+  constructor (private httpClient: HttpClient) {
 
     //on value change retrieve list of results with debounceTime
-    this.searchBarFormControl.valueChanges.pipe(
-      debounceTime(500)
-    ).subscribe(inputValue => {
+    this.searchBarFormControl.valueChanges.pipe(debounceTime(500)).subscribe(inputValue => this.getSearchResults(inputValue));
+  }
+  
+  //get/refresh search results
+  getSearchResults(searchQuery: string) {
 
-      if(inputValue.length < 3){
-        this.searchInProgress = false;
-        this.searchResults = [];
-        this.setPlaceholder(true, 'empty');
-        return;
-      }
-      
+    if(searchQuery.length < 3){
+      this.searchInProgress = false;
       this.searchResults = [];
-      this.searchInProgress = true;
-      this.setPlaceholder(false);
+      this.setPlaceholder(true, 'empty');
+      return;
+    }
+    
+    this.searchResults = [];
+    this.searchInProgress = true;
+    this.setPlaceholder(false);
 
-      this.httpClient.get<{state: String, length: number, results: Array<SearchResult>}>('api/express/user/friends/searchUsers', {withCredentials: true, params: new HttpParams().set('searchQuery', inputValue)}).pipe(delayWhen(() => timer(200))).subscribe(response => {
-        if(response.state === 'success'){
+    this.httpClient.get<{state: String, length: number, results: Array<SearchResult>}>('api/express/user/friends/searchUsers', {withCredentials: true, params: new HttpParams().set('searchQuery', searchQuery)}).pipe(delayWhen(() => timer(200))).subscribe(response => {
+      if(response.state === 'success'){
 
-          if(response.length === 0){
-            this.searchInProgress = false;
-            this.setPlaceholder(true, 'not-found');
-            return;
-          }
-
-          //convert to SearchResultHTMLComponentData and save
-          this.searchResults = response.results.map(responseResult => this.createSearchResultHTMLComponentData(responseResult));
-
+        if(response.length === 0){
           this.searchInProgress = false;
+          this.setPlaceholder(true, 'not-found');
+          return;
         }
-      })
+
+        //convert to SearchResultHTMLComponentData and save
+        this.searchResults = response.results.map(responseResult => this.createSearchResultHTMLComponentData(responseResult));
+
+        this.searchInProgress = false;
+      }
     })
   }
-
 
   createSearchResultHTMLComponentData(searchResult: SearchResult): SearchResultHTMLComponentData {
 
@@ -80,31 +80,44 @@ export class SearchPanelComponent {
 
     return({
       ...searchResult,
+      actionInProgress: false,
       buttonsType: buttonType,
       message: message,
-      buttonLoading: false
+      buttonLoading: false,
+      buttons: {
+        sendRequest: {
+          loading: false
+        },
+        accept: {
+          loading: false,
+        },
+        decline: {
+          loading: false
+        }
+      }
     })
   }
 
   //on add friend button click
-  sendFriendRequest(userId: string) {
+  sendFriendRequest(user: SearchResultHTMLComponentData) {
 
-    const resultSubjectIndex = this.searchResults.findIndex(result => result.id === userId);
-    if(resultSubjectIndex < 0)
+    if(user.actionInProgress)
       return;
 
-    const resultSubject = this.searchResults[resultSubjectIndex];
-    resultSubject.buttonLoading = true;
+    user.actionInProgress = true;
+    user.buttons.sendRequest.loading = true;
 
     //send sendFriendRequest request
-    this.httpClient.get<{state: string, message: string}>('api/express/user/friends/sendFriendRequest', {withCredentials: true, params: new HttpParams().set('userId', resultSubject.id)}).subscribe(response => {
+    this.httpClient.get<{state: string, message: string}>('api/express/user/friends/sendFriendRequest', {withCredentials: true, params: new HttpParams().set('userId', user.id)}).subscribe(response => {
       if(response.state === 'success'){
-        resultSubject.buttonsType = 'request-outgoing';
-        resultSubject.buttonLoading = false;
-        resultSubject.message = 'Friend request sent!';
+        user.buttonsType = 'request-outgoing';
+        user.buttons.sendRequest.loading = false;
+        user.actionInProgress = false;
+        user.message = 'Friend request sent!';
       }
       else
-        resultSubject.buttonLoading = false;
+        user.buttons.sendRequest.loading = false;
+        user.actionInProgress = false;
     })
   }
 
@@ -114,6 +127,43 @@ export class SearchPanelComponent {
     this.placeholderClass = placeholderClass;
   }
 
+  //accept friend request
+  acceptFriendRequest(requestUser: SearchResultHTMLComponentData) {
+
+    console.log('x')
+    
+    if(requestUser.actionInProgress)
+      return;
+
+    requestUser.actionInProgress = true
+    requestUser.buttons.accept.loading = true;
+
+    //accept request
+    this.httpClient.put<{state: string, message: string}>('api/express/user/friends/acceptFriendRequest', {friendRequestUserId: requestUser.id}, {withCredentials: true}).subscribe(response => {
+      
+      //refresh component
+      this.getSearchResults(this.searchBarFormControl.value)
+    });
+  }
+
+  //decline friend request
+  declineFriendRequest(requestUser: SearchResultHTMLComponentData) {
+
+    console.log('x')
+
+    if(requestUser.actionInProgress)
+      return;
+
+    requestUser.actionInProgress = true
+    requestUser.buttons.accept.loading = true;
+
+    //decline request
+    this.httpClient.delete<{state: string, message: string}>('api/express/user/friends/declineFriendRequest', {withCredentials: true, params: new HttpParams().set('friendRequestUserId', requestUser.id)}).subscribe(response => {
+      
+      //refresh component
+      this.getSearchResults(this.searchBarFormControl.value)
+    });
+  }
 }
 
 interface SearchResult {
@@ -125,7 +175,19 @@ interface SearchResult {
 }
 
 interface SearchResultHTMLComponentData extends SearchResult {
+  actionInProgress: boolean,
   buttonsType: string,
   message: string,
-  buttonLoading: boolean
+  buttonLoading: boolean,
+  buttons: {
+    sendRequest: {
+      loading: boolean
+    }
+    accept: {
+      loading: boolean,
+    },
+    decline: {
+      loading: boolean
+    }
+  }
 }

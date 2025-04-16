@@ -86,7 +86,7 @@ html{
     filter: brightness(.7);
   }
 
-  .small-button.disabled {
+  .small-button.disabled:not(.loading) {
     filter: brightness(.5);
     cursor: default;
   }

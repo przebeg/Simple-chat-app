@@ -31,8 +31,8 @@
                     <span class="message small-text">{{user.message}}</span>
                 </div>
                 <div class="buttons-wrapper">
-                    <div class="small-button remove-friend"></div>
-                    <div class="small-button send-message"></div>
+                    <div class="small-button remove-friend" [class.disabled]="user.buttonsDisabled" [class.loading]="user.removeFreidnButtonLoading" (click)="removeFriend(user)"></div>
+                    <div class="small-button send-message" [class.disabled]="user.buttonsDisabled"></div>
                 </div>
             </div>
         }
