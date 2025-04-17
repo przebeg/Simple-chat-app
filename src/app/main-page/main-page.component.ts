@@ -3,10 +3,11 @@ import { isPlatformBrowser } from '@angular/common';
 import { ProfileInfoComponent } from '../profile-info/profile-info.component';
 import { RouterOutlet, Router, NavigationEnd, RouterLink } from '@angular/router';
 import {filter} from 'rxjs'
+import { ChatPanelComponent } from './chat-panel/chat-panel.component';
 
 @Component({
   selector: 'main-page-component',
-  imports: [ProfileInfoComponent, RouterOutlet, RouterLink],
+  imports: [ProfileInfoComponent, RouterOutlet, RouterLink, ChatPanelComponent],
   templateUrl: './main-page.component.html',
   styleUrl: './main-page-component.css'
 })

@@ -1,0 +1,20 @@
+<div id="conversations-panel-wrapper">
+    <input [formControl]="searchFormControl" class="global-text-input" type="text" placeholder="Search for conversation">
+    <div id="conversations-wrapper" [class.placeholder]="isPlaceholder" [class]="placeholderClass"></div>
+    @if(searchInProgress){
+        @for(n of loadingPlaceholdersCount; track n){
+            <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
+        }
+    }
+    @else {
+      @for(conversation of conversations; track conversation){
+        <div class="user-element conversation-element">
+            <div class="profile-image" ></div>
+            <div class="labels">
+                <span class="name medium-text">Nazwa Konwersacji</span>
+                <span class="message small-text conversation-last-message">Ostatnia wiadomość</span>
+            </div>
+        </div>
+      }
+    }
+</div>

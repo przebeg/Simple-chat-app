@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+#conversations-wrapper.placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#conversations-wrapper.placeholder::before {
+  content: "";
+  aspect-ratio: 1;
+  background-size: cover;
+  background-position: center center;
+  width: 80px;
+  height: auto;
+  filter: opacity(.2);
+}
+
+#conversations-wrapper.placeholder::after {
+  font-family: "Noto Sans", serif;
+  font-size: 1.2rem;
+  color: white;
+  text-align: center;
+  filter: opacity(.2);
+}
+
+#conversations-wrapper.placeholder.empty::before {
+  background-image: url('/assets/conversation-placeholder.png');
+}
+
+#conversations-wrapper.placeholder.empty::after {
+  content: 'Your conversations will appear here';
+}
+
+#conversations-wrapper.placeholder.not-found::before {
+  background-image: url('/assets/conversation-not-found.png');
+}
+
+#conversations-wrapper.placeholder.not-found::after {
+  content: 'No conversations found';
+}
+
+.conversation-element .profile-image {
+  border-radius: 0;
+  background: url('/assets/profile-image-placeholder.png') left top no-repeat,
+  url('/assets/profile-picture/profile picture placeholder.png') right top no-repeat,
+  url('/assets/profile-image-placeholder.png') left bottom no-repeat,
+  url('/assets/profile-image-placeholder.png') right bottom no-repeat;
+  background-size: 23px, 23px, 23px, 23px;
+}
+
+.conversation-element {
+  transition: background-color .1s ease-in-out;
+  cursor: pointer;
+}
+
+.conversation-element:hover {
+   background-color: #4a4a4a;
+}
+
+.conversation-element .labels .conversation-last-message {
+  padding-top: 8px;
+  filter: brightness(.6);
+}

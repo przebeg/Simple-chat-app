@@ -57,19 +57,3 @@
 .user-element.friend-user-element .send-message{
   background-image: url('/assets/send-message.png');
 }
-.user-element.friend-user-element .profile-image {
-  position: relative;
-}
-
-.user-element.friend-user-element.active-now .profile-image::after{
-  content: '';
-  position: absolute;
-  width: 14px;
-  height: auto;
-  aspect-ratio: 1;
-  background-color: #28db14;
-  right: 0;
-  bottom: -4px;
-  border-radius: 50%;
-
-}
