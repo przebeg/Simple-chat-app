@@ -9,10 +9,21 @@
     @else {
       @for(conversation of conversations; track conversation){
         <div class="user-element conversation-element">
-            <div class="profile-image" [style.background-image]="conversation.conversationImageQuery"></div>
+            @switch(conversation.type){
+                @case ('private') {<div class="profile-image" [style.background-image]="conversation.conversationImageQuery"></div>}
+                @case ('group') {
+                    <div class="profile-image group-image">
+                        @for(user of conversation.users; track user){
+                            <div class="profile-image group-user-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
+                        }
+                    </div>
+                }
+                @default {<div class="profile-image default-image"></div>}
+            }
+            
             <div class="labels">
                 <span class="name medium-text">{{conversation.conversationName}}</span>
-                <span class="message small-text conversation-last-message">{{conversation.lastMessage}}</span>
+                <span class="message small-text conversation-last-message">{{conversation.message}}</span>
             </div>
         </div>
       }

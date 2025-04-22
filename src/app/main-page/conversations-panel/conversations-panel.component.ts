@@ -48,10 +48,12 @@ export class ConversationsPanelComponent {
         this.conversations = response.conversations.map(conversation => {return({
           ...conversation,
           conversationImageQuery: this.conversationBackgroundStyleQuery(conversation),
-          conversationName: this.conversationNameBuilder(conversation)
+          conversationName: this.conversationNameBuilder(conversation),
+          message: this.conversationLastMessageBuilder(conversation)
         })});
 
-        console.log(response.conversations)
+        console.log(response.conversations);
+        this.conversationLastMessageBuilder(this.conversations[0])
       }
     })
   }
@@ -63,7 +65,9 @@ export class ConversationsPanelComponent {
     if(conversation.type === 'private')
       return (`url(\'http://localhost:3000/api/express/data/profileImage/${conversation.users[0].id}\'), url(\'/assets/profile-image-placeholder.png\')`);
 
-    //TODO quty builder for group conversations
+    //if conversation is group, query is empty
+    if(conversation.type === 'group')
+      return '';
 
     return ('url(\'/assets/profile-image-placeholder.png\')')
   }
@@ -94,8 +98,40 @@ export class ConversationsPanelComponent {
       return conversation.name;
 
     return '';
+  }
 
+  conversationLastMessageBuilder(conversation: Conversation): string {
 
+    const lastMessage = conversation.lastMessage;
+    const lastMessageDate = new Date(lastMessage.timestamp);
+    let message: string = conversation.users.find(user => user.id === lastMessage.senderId)!.username + ': ' + lastMessage.content + ' · ';
+    const timeDiff: number = Date.now() - lastMessageDate.getTime();
+
+    //get day suffix
+    const getDaySuffix = (day: number): string => {
+      if(day % 10 === 1 && day !== 11)
+        return 'st';
+      if(day % 10 === 2 && day !== 12)
+        return 'nd';
+      if(day % 10 === 3 && day !== 13)
+        return 'rd';
+
+      return 'th'
+    }
+
+    //if message was sent less than minute ago
+    if(timeDiff < (1000 * 60))
+      message += 'now';
+
+    //less than 12h
+    else if(timeDiff < (1000 * 60 * 60 * 12))
+      message += `${lastMessageDate.getHours()}:${lastMessageDate.getMinutes()}`;
+
+    //more than 12h, display date
+    else
+      message += `${lastMessageDate.toLocaleString('en-US', {month: 'short'})} ${lastMessageDate.getDay() + getDaySuffix(lastMessageDate.getDay())}`
+
+    return message;
   }
 
 }
@@ -107,6 +143,7 @@ interface Conversation {
   locked: boolean,
   lastMessage: {
     senderId: string,
+    content: string,
     timestamp: Date,
     emojis: Array<string>
   }
@@ -116,6 +153,7 @@ interface Conversation {
 
 interface ConversationHTMLData extends Conversation {
   conversationImageQuery: string,
-  conversationName: string
+  conversationName: string,
+  message: string
 }
 

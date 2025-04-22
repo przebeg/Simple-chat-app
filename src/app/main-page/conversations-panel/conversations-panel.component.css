@@ -47,13 +47,32 @@
 }
 
 .conversation-element .profile-image {
-  background-size: cover;
+   background-size: cover; 
   /* border-radius: 0;
   background: url('/assets/profile-image-placeholder.png') left top no-repeat,
   url('/assets/profile-picture/profile picture placeholder.png') right top no-repeat,
   url('/assets/profile-image-placeholder.png') left bottom no-repeat,
   url('/assets/profile-image-placeholder.png') right bottom no-repeat;
   background-size: 23px, 23px, 23px, 23px; */
+}
+
+.conversation-element .profile-image.group-user-image{
+  width: 50%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.conversation-element .profile-image.group-image{
+  position: relative;
+  border-radius: 0;
+  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.conversation-element .profile-image .default-image {
+  background-image: url('/assets/profile-image-placeholder.png');
 }
 
 .conversation-element {
