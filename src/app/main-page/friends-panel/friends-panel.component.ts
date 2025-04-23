@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FriendConversationLoadingPlaceholderComponent } from '../friend-conversation-loading-placeholder/friend-conversation-loading-placeholder.component';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {BehaviorSubject, Observable, Subject} from 'rxjs'
+import { ChatService } from '../chat.service';
 
 @Component({
   selector: 'friends-panel',
@@ -18,7 +19,7 @@ export class FriendsPanelComponent {
   friends: Array<FriendComponentData> = [];
   friendsRequests: Array<FriendRequestComponentData> = [];
 
-  constructor(private httpClient: HttpClient) {
+  constructor(private httpClient: HttpClient, private chatService: ChatService) {
 
     //on begin get friends list
     this.getFriendsAndRequests();
@@ -55,6 +56,9 @@ export class FriendsPanelComponent {
         })});
 
         this.friendsLoadingInProgress = false;
+
+        //update service
+        this.chatService.newFriendRequestsCount.next(this.friendsRequests.length)
       } 
     });
   }

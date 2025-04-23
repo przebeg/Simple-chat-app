@@ -7,6 +7,9 @@ import { ConversationsPanelComponent } from './conversations-panel/conversations
 export const mainPageSidePanelRouter: Routes = [
     {path: '', redirectTo: 'conversations', pathMatch: 'full'},
     {path: 'conversations', component: ConversationsPanelComponent},
+    {path: 'conversations/:@', component: ConversationsPanelComponent},
     {path: 'friends', component: FriendsPanelComponent},
-    {path: 'search', component: SearchPanelComponent}
+    {path: 'friends/:@', component: FriendsPanelComponent},
+    {path: 'search', component: SearchPanelComponent},
+    {path: 'search/:@', component: SearchPanelComponent}
 ];

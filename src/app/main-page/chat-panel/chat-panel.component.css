@@ -25,8 +25,12 @@
   width: 100%;
   flex-grow: 1;
   padding-left: 120px;
-  padding-right: 150px;
+  padding-right: 200px;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: column;
 }
 
 #message-input-bar {
@@ -38,8 +42,9 @@
   justify-content: center;
   gap: 8px;
   box-sizing: border-box;
-  padding: 20%;
-  padding-bottom: 32px;
+  width: 60%;
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 #message-input-bar .global-text-input {
@@ -62,6 +67,7 @@ textarea {
   justify-content: flex-start;
   align-items: center;
   width: 100%;
+  height: fit-content;
 }
 
 .message .user-element{
@@ -69,12 +75,20 @@ textarea {
 }
 
 .message .user-element .profile-image{
-  height: 30px;
+  height: 45px;
 }
 
 .message .message-content {
   background-color: #1F1D1D;
   padding: 16px;
   border-radius: 20px;
+}
+
+.message.self{
+  flex-direction: row-reverse;
+}
+
+.message.self .profile-image {
+  display: none;
 }
 

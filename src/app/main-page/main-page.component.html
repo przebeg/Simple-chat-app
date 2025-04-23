@@ -4,12 +4,14 @@
         <a [routerLink]="'/conversations'">
             <div class="option-icon">
                 <img src="assets/options-bar-icons/chat-icon.png" alt="Chats Icon">
+                <span class="option-icon-indicator" [class.hidden]="chatsIndicatorValue.value === 0">{{chatsIndicatorValue.value}}</span>
                 <span>Chats</span>
             </div>
         </a>
         <a [routerLink]="'/friends'">
             <div class="option-icon">
                 <img src="assets/options-bar-icons/friends.png" alt="Friends Icon">
+                <span class="option-icon-indicator" [class.hidden]="friendsIndicatorValue.value === 0">{{friendsIndicatorValue.value}}</span>
                 <span>Friends</span>
         </div></a>
         <a [routerLink]="'/search'"><div class="option-icon">

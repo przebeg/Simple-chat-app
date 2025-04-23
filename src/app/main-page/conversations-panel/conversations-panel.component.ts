@@ -25,8 +25,6 @@ export class ConversationsPanelComponent {
 
     //at the start get conversations
     this.getConversations();
-
-    console.log(cookieService.getAll())
   }
 
   //get conversations by query or all conversations when query === null
@@ -129,7 +127,7 @@ export class ConversationsPanelComponent {
 
     //more than 12h, display date
     else
-      message += `${lastMessageDate.toLocaleString('en-US', {month: 'short'})} ${lastMessageDate.getDay() + getDaySuffix(lastMessageDate.getDay())}`
+      message += `${lastMessageDate.toLocaleString('en-US', {month: 'short'})} ${lastMessageDate.getDate()}${getDaySuffix(lastMessageDate.getDate())}`
 
     return message;
   }
