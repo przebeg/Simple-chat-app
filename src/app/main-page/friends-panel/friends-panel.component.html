@@ -1,4 +1,4 @@
-<div id="friends-wrapper" [class.placeholder]="friends.length === 0 && friendsRequests.length === 0 && !friendsLoadingInProgress">
+<div id="friends-wrapper" [class.placeholder]="allowPlaceholder && !friendsLoadingInProgress">
     @if(friendsLoadingInProgress){
         @for(n of placeholdersCount; track n){
             <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>

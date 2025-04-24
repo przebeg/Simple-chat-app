@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { FriendConversationLoadingPlaceholderComponent } from '../friend-conversation-loading-placeholder/friend-conversation-loading-placeholder.component';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import {BehaviorSubject, Observable, Subject} from 'rxjs'
-import { ChatService } from '../chat.service';
+import {interval, Observable} from 'rxjs'
+import { FriendsService, Friend, FriendRequest } from './friends.service';
 
 @Component({
   selector: 'friends-panel',
@@ -15,56 +14,58 @@ export class FriendsPanelComponent {
 
   placeholdersCount: Array<number> = new Array(6);
   
-  friendsLoadingInProgress: boolean = true;
+  friendsLoadingInProgress: boolean;
   friends: Array<FriendComponentData> = [];
   friendsRequests: Array<FriendRequestComponentData> = [];
+  allowPlaceholder: boolean;
 
-  constructor(private httpClient: HttpClient, private chatService: ChatService) {
+  constructor(private friendsService: FriendsService) {
+
+    //allow placeholder
+    this.allowPlaceholder = this.friendsService.allowPlaceholder$.value;
+    this.friendsService.allowPlaceholder$.subscribe(value => this.allowPlaceholder = value);
+
+    //friends loading
+    this.friendsLoadingInProgress = this.friendsService.friendsLoadingInProgress$.value;
+    this.friendsService.friendsLoadingInProgress$.subscribe(value => this.friendsLoadingInProgress = value)
 
     //on begin get friends list
-    this.getFriendsAndRequests();
-  }
+    this.parseFriends(this.friendsService.friends$.value);
+    this.parseFriendRequests(this.friendsService.friendRequests$.value);
 
-  //get list of all friends and friend requests at render (in constructor)
-  getFriendsAndRequests() {
+    //on friends and request list change parse
+    this.friendsService.friends$.subscribe(friends => this.parseFriends(friends));
+    this.friendsService.friendRequests$.subscribe(friendRequests => this.parseFriendRequests(friendRequests));
 
-    this.friendsLoadingInProgress = true;
-    this.friends = [];
-    this.friendsRequests = [];
-
-    //get friends list
-    this.httpClient.get<{state: string, friendsCount: number, friends: Array<Friend>, incomingFriendsRequests: Array<FriendRequest>}>('api/express/user/friends/getFriendsList', {withCredentials: true}).subscribe(response => {
-      if(response.state === 'success'){
-
-        //convert Friends to FriendComponentData
-        this.friends = response.friends.map(friend => {return({
-          ...friend,
-          buttonsDisabled: false,
-          actionInProgress: false,
-          removeFreidnButtonLoading: false
-        })});
-        this.friends.forEach(friend => this.setLastActiveMessage(friend));
-
-        //make Component data of FriendRequest
-        this.friendsRequests = response.incomingFriendsRequests.map(friendRequest => {return({
-          ...friendRequest,
-          actionInProgress: false,
-          buttons: {
-            reject: {disabled: false, loading: false},
-            accept: {disabled: false, loading: false},
-          }
-        })});
-
-        this.friendsLoadingInProgress = false;
-
-        //update service
-        this.chatService.newFriendRequestsCount.next(this.friendsRequests.length)
-      } 
+    //every 30s update friend's last active label
+    interval(30000).subscribe(() => {
+      this.friends.forEach(friend => this.setLastActiveMessage(friend));
     });
   }
 
+  private parseFriends(_friends: Array<Friend>) {
+    this.friends = _friends.map(friend => {return({
+      ...friend,
+      buttonsDisabled: false,
+      actionInProgress: false,
+      removeFreidnButtonLoading: false
+    })});
+    this.friends.forEach(friend => this.setLastActiveMessage(friend));
+  }
+
+  private parseFriendRequests(_friendRequests: Array<FriendRequest>){
+    this.friendsRequests = _friendRequests.map(friendRequest => {return({
+      ...friendRequest,
+      actionInProgress: false,
+      buttons: {
+        reject: {disabled: false, loading: false},
+        accept: {disabled: false, loading: false},
+      }
+    })});
+  }
+
   //set last active message string
-  setLastActiveMessage(friend: Friend) {
+  private setLastActiveMessage(friend: Friend) {
 
     const timeDiff = Date.now() - new Date(friend.lastActive).getTime();
     friend.activeNow = false;
@@ -89,7 +90,7 @@ export class FriendsPanelComponent {
   }
 
   //decline friend request
-  declineFriendRequest(friendRequest: FriendRequestComponentData) {
+  public declineFriendRequest(friendRequest: FriendRequestComponentData) {
     if(friendRequest.actionInProgress)
       return;
 
@@ -98,29 +99,10 @@ export class FriendsPanelComponent {
      
     button.loading = true;
     friendRequest.buttons.accept.disabled = true;
-
-    //decline request
-    this.httpClient.delete<{state: string, message: string}>('api/express/user/friends/declineFriendRequest', {withCredentials: true, params: new HttpParams().set('friendRequestUserId', friendRequest.id)}).subscribe(response => {
-      console.log(response)
-      if(response.state === 'success'){
-        
-        //friend request rejected
-        const rejectedFriendIndex = this.friendsRequests.findIndex(friendRequestArr => friendRequestArr.id === friendRequest.id);
-
-        if(rejectedFriendIndex >= 0)
-          this.friendsRequests.splice(rejectedFriendIndex, 1);
-
-      }
-      else{
-        friendRequest.actionInProgress = false;
-        button.loading = false;
-        friendRequest.buttons.accept.disabled = false;
-      }
-    });
-   }
+  }
 
   //accept friend request
-  acceptFriendRequest(friendRequest: FriendRequestComponentData) {
+  public acceptFriendRequest(friendRequest: FriendRequestComponentData) {
     if(friendRequest.actionInProgress)
       return;
 
@@ -130,19 +112,8 @@ export class FriendsPanelComponent {
     button.loading = true;
     friendRequest.buttons.reject.disabled = true;
 
-    //accept request
-    this.httpClient.put<{state: string, message: string}>('api/express/user/friends/acceptFriendRequest', {friendRequestUserId: friendRequest.id}, {withCredentials: true}).subscribe(response => {
-      if(response.state === 'success'){
-
-        //friend request was accepted, refresh component
-        this.getFriendsAndRequests();
-      }
-      else{
-        friendRequest.actionInProgress = false;
-        button.loading = false;
-        friendRequest.buttons.reject.disabled = false;
-      }
-    });
+    //perform request
+    this.friendsService.acceptFriendRequest(friendRequest.id);
   }
 
   //remove friend
@@ -155,40 +126,14 @@ export class FriendsPanelComponent {
     friend.buttonsDisabled = true;
 
     //remove friend http request
-    this.httpClient.delete<{state: string, message: string}>('api/express/user/friends/removeFriend', {withCredentials: true, params: new HttpParams().set('friendUserId', friend.id)}).subscribe(response => {
-      if(response.state === 'success'){
-        console.log('x')
-        //on response success refresh friends list
-        this.getFriendsAndRequests();
-      }
-      else{
-        friend.actionInProgress = false;
-        friend.removeFreidnButtonLoading = false;
-        friend.buttonsDisabled = false;
-      }
-    });
-
+    this.friendsService.removeFriend(friend.id);
   }
-}
-
-interface Friend {
-  id: string,
-  active: boolean,
-  username: string,
-  message: string,
-  activeNow: boolean,
-  lastActive: Date,
 }
 
 interface FriendComponentData extends Friend {
   buttonsDisabled: boolean,
   actionInProgress: boolean,
   removeFreidnButtonLoading: boolean
-}
-
-interface FriendRequest {
-  id: string,
-  username: string
 }
 
 interface FriendRequestComponentData extends FriendRequest {

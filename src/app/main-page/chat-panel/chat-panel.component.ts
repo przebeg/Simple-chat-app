@@ -27,7 +27,7 @@ export class ChatPanelComponent {
       }
     });
 
-    //on messages opdate
+    //on messages update
     this.chatService.getConversationMessages(this.conversationId).subscribe(response => {
       this.messages = response.messages;
       console.log(this.messages)

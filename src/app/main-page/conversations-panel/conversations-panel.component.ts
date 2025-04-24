@@ -3,6 +3,7 @@ import { FriendConversationLoadingPlaceholderComponent } from '../friend-convers
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import {SsrCookieService} from 'ngx-cookie-service-ssr';
+import { Friend, FriendsService } from '../friends-panel/friends.service';
 
 @Component({
   selector: 'conversations-panel',
@@ -11,6 +12,9 @@ import {SsrCookieService} from 'ngx-cookie-service-ssr';
   styleUrl: './conversations-panel.component.css'
 })
 export class ConversationsPanelComponent {
+
+  //external - friends
+  private _friends: Array<Friend> = [];
 
   isPlaceholder: boolean = false;
   placeholderClass: string = 'empty'; //empty or not-found
@@ -21,14 +25,39 @@ export class ConversationsPanelComponent {
 
   conversations: Array<ConversationHTMLData> = [];
 
-  constructor (private httpClient: HttpClient, private cookieService: SsrCookieService) {
+  constructor (private httpClient: HttpClient, private friendsService: FriendsService) {
 
+    //TO BE CONVERTED TO SERVICE
     //at the start get conversations
     this.getConversations();
+
+    //on friends update change active-nows
+    this.friendsService.friends$.subscribe(friends => this._friends = friends);
+
+  }
+
+  //TO DO
+  //based on _friends get conversationActiveNow
+  private getActiveNow(conversation: Conversation) {
+
+    let activeNow = false;
+    console.log(conversation.users);
+    console.log(this._friends)
+    conversation.users.forEach(conversationUser => {
+      const friend = this._friends.find(friend => friend.id === conversationUser.id);
+      if(friend){
+
+        //active-now
+        const timeDiff = Date.now() - new Date(friend.lastActive).getTime();
+
+      }
+    });
+
+    return activeNow;
   }
 
   //get conversations by query or all conversations when query === null
-  getConversations(query: string | null = null) {
+  private getConversations(query: string | null = null) {
     if(this.searchInProgress)
       return;
 
@@ -47,17 +76,19 @@ export class ConversationsPanelComponent {
           ...conversation,
           conversationImageQuery: this.conversationBackgroundStyleQuery(conversation),
           conversationName: this.conversationNameBuilder(conversation),
-          message: this.conversationLastMessageBuilder(conversation)
+          message: this.conversationLastMessageBuilder(conversation),
+          activeNow: this.getActiveNow(conversation)
         })});
 
-        console.log(response.conversations);
+        //console.log(this.conversations)
+
         this.conversationLastMessageBuilder(this.conversations[0])
       }
     })
   }
 
   //build background image style query
-  conversationBackgroundStyleQuery(conversation: Conversation): string {
+  private conversationBackgroundStyleQuery(conversation: Conversation): string {
 
     //if conversation is private (just one UserID should remain)
     if(conversation.type === 'private')
@@ -71,7 +102,7 @@ export class ConversationsPanelComponent {
   }
 
   //build conversation name (if is not set)
-  conversationNameBuilder(conversation: Conversation): string {
+  private conversationNameBuilder(conversation: Conversation): string {
 
     //if name is set
     if(conversation.name.length > 0)
@@ -98,7 +129,7 @@ export class ConversationsPanelComponent {
     return '';
   }
 
-  conversationLastMessageBuilder(conversation: Conversation): string {
+  private conversationLastMessageBuilder(conversation: Conversation): string {
 
     const lastMessage = conversation.lastMessage;
     const lastMessageDate = new Date(lastMessage.timestamp);
@@ -134,7 +165,6 @@ export class ConversationsPanelComponent {
 
 }
 
-
 interface Conversation {
   id: string,
   users: Array<{id: string, username: string}>
@@ -152,6 +182,7 @@ interface Conversation {
 interface ConversationHTMLData extends Conversation {
   conversationImageQuery: string,
   conversationName: string,
-  message: string
+  message: string,
+  activeNow: boolean,
 }
 

@@ -7,8 +7,8 @@
         }
     }
     @else {
-      @for(conversation of conversations; track conversation){
-        <div class="user-element conversation-element">
+      @for(conversation of conversations; track conversation.id){
+        <div class="user-element conversation-element" [class.active-now]="conversation.activeNow">
             @switch(conversation.type){
                 @case ('private') {<div class="profile-image" [style.background-image]="conversation.conversationImageQuery"></div>}
                 @case ('group') {
