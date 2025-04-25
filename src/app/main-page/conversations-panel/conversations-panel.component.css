@@ -88,3 +88,7 @@
   padding-top: 8px;
   filter: brightness(.6);
 }
+
+.user-element.conversation-element.active-now .profile-image.group-user-image::after{
+  display: none;
+}

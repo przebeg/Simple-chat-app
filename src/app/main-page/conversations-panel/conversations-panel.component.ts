@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { FriendConversationLoadingPlaceholderComponent } from '../friend-conversation-loading-placeholder/friend-conversation-loading-placeholder.component';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient} from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import {SsrCookieService} from 'ngx-cookie-service-ssr';
-import { Friend, FriendsService } from '../friends-panel/friends.service';
+import { ConversationsService, Conversation } from './conversations.service';
+import { debounceTime } from 'rxjs';
 
 @Component({
   selector: 'conversations-panel',
@@ -14,7 +14,6 @@ import { Friend, FriendsService } from '../friends-panel/friends.service';
 export class ConversationsPanelComponent {
 
   //external - friends
-  private _friends: Array<Friend> = [];
 
   isPlaceholder: boolean = false;
   placeholderClass: string = 'empty'; //empty or not-found
@@ -25,65 +24,27 @@ export class ConversationsPanelComponent {
 
   conversations: Array<ConversationHTMLData> = [];
 
-  constructor (private httpClient: HttpClient, private friendsService: FriendsService) {
-
-    //TO BE CONVERTED TO SERVICE
-    //at the start get conversations
-    this.getConversations();
-
-    //on friends update change active-nows
-    this.friendsService.friends$.subscribe(friends => this._friends = friends);
-
-  }
-
-  //TO DO
-  //based on _friends get conversationActiveNow
-  private getActiveNow(conversation: Conversation) {
-
-    let activeNow = false;
-    console.log(conversation.users);
-    console.log(this._friends)
-    conversation.users.forEach(conversationUser => {
-      const friend = this._friends.find(friend => friend.id === conversationUser.id);
-      if(friend){
-
-        //active-now
-        const timeDiff = Date.now() - new Date(friend.lastActive).getTime();
-
-      }
+  constructor (private httpClient: HttpClient, private conversationsService: ConversationsService) {
+    
+    //on conversation$ update
+    this.conversationsService.conversations$.subscribe(conversations => {
+      this.conversations = (conversations as Array<Conversation>).map(conversation => {return({
+        ...conversation,
+        conversationImageQuery: this.conversationBackgroundStyleQuery(conversation),
+        conversationName: this.conversationNameBuilder(conversation),
+        message: this.conversationLastMessageBuilder(conversation),
+        activeNow: this.getActiveNow(conversation)
+      })});
     });
 
-    return activeNow;
-  }
+    //search conversation with search bar, searching by conversation name
+    this.searchFormControl.valueChanges.pipe(debounceTime(300)).subscribe(searchQuery => {
+      if(searchQuery.length < 3) //minimum 3 chars
+        return;
 
-  //get conversations by query or all conversations when query === null
-  private getConversations(query: string | null = null) {
-    if(this.searchInProgress)
-      return;
+      const _conversations = this.conversations.filter(conversation => conversation.conversationName.includes(searchQuery));
 
-    //filter query
-    if(query === null || query.length < 3)
-      query = '';
-
-    this.searchInProgress = true;
-    this.httpClient.get<{state: string, message: string, conversations: Array<Conversation>}>('api/express/conversations/getConversations', {withCredentials: true, params: new HttpParams().set('searchQuery', query)}).subscribe(response => {
-      if(response.state === 'success'){
-
-        this.searchInProgress = false;
-
-        //if no conversations found
-        this.conversations = response.conversations.map(conversation => {return({
-          ...conversation,
-          conversationImageQuery: this.conversationBackgroundStyleQuery(conversation),
-          conversationName: this.conversationNameBuilder(conversation),
-          message: this.conversationLastMessageBuilder(conversation),
-          activeNow: this.getActiveNow(conversation)
-        })});
-
-        //console.log(this.conversations)
-
-        this.conversationLastMessageBuilder(this.conversations[0])
-      }
+        
     })
   }
 
@@ -163,20 +124,14 @@ export class ConversationsPanelComponent {
     return message;
   }
 
-}
+  //get active now as bool, in future get last active time text
+  private getActiveNow(conversation: Conversation): boolean {
 
-interface Conversation {
-  id: string,
-  users: Array<{id: string, username: string}>
-  locked: boolean,
-  lastMessage: {
-    senderId: string,
-    content: string,
-    timestamp: Date,
-    emojis: Array<string>
+    if(conversation.activeAvailable)
+      return(Date.now() - conversation.lastActive.getTime() < (60 * 1000)) //if less than 1 minute
+    else return false
   }
-  type: string,
-  name: string
+
 }
 
 interface ConversationHTMLData extends Conversation {

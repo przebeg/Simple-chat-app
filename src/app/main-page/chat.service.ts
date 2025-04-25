@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { FriendsService } from './friends-panel/friends.service';
+import { ConversationsService } from './conversations-panel/conversations.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,10 +21,13 @@ export class ChatService {
 
   public messages: Array<MessageInterface> = [];
 
-  constructor(private httpClient: HttpClient, private friendsService: FriendsService) { 
+  constructor(private httpClient: HttpClient, private friendsService: FriendsService, private conversationsService: ConversationsService) { 
 
     //get friends
     this.friendsService.getFriendsAndRequests();
+
+    //get conversations
+    this.conversationsService.getConversations();
 
     //connect to websocket
     this.webSocket = new WebSocket('ws://localhost:3000');

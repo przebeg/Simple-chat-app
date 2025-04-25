@@ -2,9 +2,10 @@ import { Component, signal, Signal, OnInit, Inject, PLATFORM_ID } from '@angular
 import { isPlatformBrowser } from '@angular/common';
 import { ProfileInfoComponent } from '../profile-info/profile-info.component';
 import { RouterOutlet, Router, NavigationEnd, RouterLink } from '@angular/router';
-import {BehaviorSubject, filter} from 'rxjs'
+import {BehaviorSubject, filter, interval} from 'rxjs'
 import { ChatPanelComponent } from './chat-panel/chat-panel.component';
 import { ChatService } from './chat.service';
+import { FriendsService } from './friends-panel/friends.service';
 
 @Component({
   selector: 'main-page-component',
@@ -15,16 +16,15 @@ import { ChatService } from './chat.service';
 export class MainPageComponent {
 
   leftPanelTitle: string = '';
-  chatsIndicatorValue: BehaviorSubject<number>
-  friendsIndicatorValue: BehaviorSubject<number>
+  friendsRequestsIndicatorValue: number = 0;
 
-  constructor(private router: Router, private chatService: ChatService) {
+  constructor(private router: Router, private friendsService: FriendsService) {
 
-    //assing dynamic values from chatService
-    this.chatsIndicatorValue = this.chatService.newChatsCount;
-    this.friendsIndicatorValue = this.chatService.newFriendRequestsCount;
+    //on new friend request
+    this.friendsService.friendRequests$.subscribe(friendRequests => {
+      this.friendsRequestsIndicatorValue = friendRequests.length
+    });
 
-    console.log(this.chatsIndicatorValue.value)
 
     //on router navigation get and set left panel title
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {

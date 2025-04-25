@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, interval, take, race, tap, timer} from 'rxjs';
+import { BehaviorSubject, interval, race, tap, timer} from 'rxjs';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -44,7 +44,6 @@ export class FriendsService {
 
   //silent update friends list
   public updateFriendsListSilent() {
-    console.log('x')
     //request
     this.httpClient.get<{state: string, friendsCount: number, friends: Array<Friend>, incomingFriendsRequests: Array<FriendRequest>}>('api/express/user/friends/getFriendsList',{
       withCredentials: true
