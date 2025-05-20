@@ -4,6 +4,7 @@ import { HttpClient} from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ConversationsService, Conversation } from './conversations.service';
 import { debounceTime } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'conversations-panel',
@@ -12,8 +13,6 @@ import { debounceTime } from 'rxjs';
   styleUrl: './conversations-panel.component.css'
 })
 export class ConversationsPanelComponent {
-
-  //external - friends
 
   isPlaceholder: boolean = false;
   placeholderClass: string = 'empty'; //empty or not-found
@@ -24,7 +23,7 @@ export class ConversationsPanelComponent {
 
   conversations: Array<ConversationHTMLData> = [];
 
-  constructor (private httpClient: HttpClient, private conversationsService: ConversationsService) {
+  constructor (private router: Router, private httpClient: HttpClient, private conversationsService: ConversationsService) {
     
     //on conversation$ update
     this.conversationsService.conversations$.subscribe(conversations => {
@@ -33,7 +32,8 @@ export class ConversationsPanelComponent {
         conversationImageQuery: this.conversationBackgroundStyleQuery(conversation),
         conversationName: this.conversationNameBuilder(conversation),
         message: this.conversationLastMessageBuilder(conversation),
-        activeNow: this.getActiveNow(conversation)
+        activeNow: this.getActiveNow(conversation),
+        isTyping: false
       })});
     });
 
@@ -43,7 +43,6 @@ export class ConversationsPanelComponent {
         return;
 
       const _conversations = this.conversations.filter(conversation => conversation.conversationName.includes(searchQuery));
-
         
     })
   }
@@ -90,11 +89,21 @@ export class ConversationsPanelComponent {
     return '';
   }
 
+  //build last message of conversation
   private conversationLastMessageBuilder(conversation: Conversation): string {
 
     const lastMessage = conversation.lastMessage;
     const lastMessageDate = new Date(lastMessage.timestamp);
-    let message: string = conversation.users.find(user => user.id === lastMessage.senderId)!.username + ': ' + lastMessage.content + ' · ';
+    const lastMessageUserIndex = conversation.users.findIndex(user => user.id === lastMessage.senderId)!;
+    let lastMessageUserUsername: string;
+
+    //check if last message was sent by this user
+    if(lastMessageUserIndex < 0)
+      lastMessageUserUsername = 'You';
+    else
+      lastMessageUserUsername = conversation.users[lastMessageUserIndex].username;
+
+    let message: string = lastMessageUserUsername + ': ' + lastMessage.content + ' · ';
     const timeDiff: number = Date.now() - lastMessageDate.getTime();
 
     //get day suffix
@@ -132,6 +141,18 @@ export class ConversationsPanelComponent {
     else return false
   }
 
+  //navigate to clicked conversation
+  public conversationClick(conversation: Conversation) {
+
+    //navigate
+    this.router.navigate(['conversations', `@${conversation.type === 'private'? conversation.users[0].id: conversation.id}`]);
+
+    //change active conversation in service
+    this.conversationsService.activeConversation$.next(conversation);
+  }
+
+
+
 }
 
 interface ConversationHTMLData extends Conversation {
@@ -139,5 +160,6 @@ interface ConversationHTMLData extends Conversation {
   conversationName: string,
   message: string,
   activeNow: boolean,
+  isTyping: boolean
 }
 

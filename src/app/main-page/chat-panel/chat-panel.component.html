@@ -20,7 +20,7 @@
         }
     </div>
     <div id="message-input-bar">
-        <textarea type="text" placeholder="Send message to andrzej" class="global-text-input"></textarea>
+        <textarea type="text" placeholder="Send message to andrzej" class="global-text-input" (input)="messageInputChange($event)"></textarea>
         <div id="message-input-buttons-wrapper">
             <div class="small-button"></div>
         </div>

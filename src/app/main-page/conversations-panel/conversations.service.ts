@@ -1,7 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, race } from 'rxjs';
+import { BehaviorSubject, Subject, filter} from 'rxjs';
 import { Friend, FriendsService } from '../friends-panel/friends.service';
+import { SsrCookieService } from 'ngx-cookie-service-ssr';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -11,10 +14,13 @@ export class ConversationsService {
   conversationsLoadingInProgress$: BehaviorSubject<boolean> = new BehaviorSubject(true);
   conversations$: BehaviorSubject<Array<Conversation> | any> = new BehaviorSubject([]);
   allowPlaceholder$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  activeConversation$: Subject<Conversation> = new Subject();
 
+  constructor(private router: Router, private httpClient: HttpClient, private friendsService: FriendsService, private ssrCookieService: SsrCookieService) {
 
-  constructor(private httpClient: HttpClient, private friendsService: FriendsService) {
-
+    //get conversations
+    this.getConversations();
+    
     //when friends$ update, update activeNows of conversations
     this.friendsService.friends$.subscribe(friends => {
      
@@ -24,7 +30,7 @@ export class ConversationsService {
       const _conversations = this.conversations$.value as Array<Conversation>;
       _conversations.forEach(conversation => this.getActiveAvailable(conversation));
       this.conversations$.next(this.conversations$.value);
-    })
+    });
   }
 
   //get active available and last active of conversation. If type is Conversation, change argument object, else if ConversationResponse, return object
@@ -79,6 +85,7 @@ export class ConversationsService {
       if(response.state === 'success'){
         this.conversations$.next(response.conversations.map(conversation => {return({
           ...conversation,
+          ...[], //start with empty message list
           ...(this.friendsService.friendsLoadingInProgress$.value? //if friends are loaded get activeNows, else set default
                 {activeAvailable: false, lastActive: 0} :  
                 this.getActiveAvailable(conversation))
@@ -86,6 +93,10 @@ export class ConversationsService {
 
         this.conversationsLoadingInProgress$.next(false);
         this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0)
+
+        //navigate to first conversation
+        this.router.navigate(['conversations', '@' + this.conversations$.value[0].id]);
+        this.activeConversation$.next(this.conversations$.value[0])
       }
     });
 
@@ -95,11 +106,30 @@ export class ConversationsService {
         this.conversations$.next((this.conversations$.value as Array<Conversation>).forEach(conversation => this.getActiveAvailable(conversation)));
     })
 
-    //race
-    // race([
-    //   res
-    // ])
+  }
 
+  //get messages of conversation by Id
+  public getConversationMessages(conversation: Conversation) {
+
+    const conversationIndex = (this.conversations$.value as Array<Conversation>).findIndex(conversation => conversation.id === conversation.id);
+    const _conversation = this.conversations$.value[conversationIndex];
+
+    if(conversation){
+      const subjectId = (_conversation.type === 'private'? _conversation.users[0] : _conversation.id)
+      this.httpClient.get<{state: string, message: string, messages: Array<MessageInterface>}>('api/express/conversations/getConversationMessages', {withCredentials: true, params: new HttpParams().set('subjectId', _conversation.id)}).subscribe(response => {
+        if(response.state === 'success'){
+
+          //assign messages to conversation
+          _conversation.messages = [...response.messages];
+
+          //emit messages values
+          const _conversations = [...this.conversations$.value];
+          _conversations.splice(conversationIndex, 1, _conversation);
+
+          this.conversations$.next(_conversations)
+        }
+      });
+    }
   }
 }
 
@@ -118,6 +148,20 @@ interface ConversationResponse {
 }
 
 export interface Conversation extends ConversationResponse {
+  messages: Array<MessageInterface>,
   activeAvailable: boolean
   lastActive: Date
+}
+
+export interface MessageEmojisSet {
+  type: string //emoji type
+  count: number
+}
+
+export interface MessageInterface {
+  senderId: string,
+  content: string,
+  timestamp: Date,
+  emojis: Array<MessageEmojisSet>
+  self: boolean
 }

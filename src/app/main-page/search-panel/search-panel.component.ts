@@ -129,8 +129,6 @@ export class SearchPanelComponent {
 
   //accept friend request
   acceptFriendRequest(requestUser: SearchResultHTMLComponentData) {
-
-    console.log('x')
     
     if(requestUser.actionInProgress)
       return;
@@ -148,8 +146,6 @@ export class SearchPanelComponent {
 
   //decline friend request
   declineFriendRequest(requestUser: SearchResultHTMLComponentData) {
-
-    console.log('x')
 
     if(requestUser.actionInProgress)
       return;

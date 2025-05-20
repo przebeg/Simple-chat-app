@@ -8,7 +8,7 @@
     }
     @else {
       @for(conversation of conversations; track conversation.id){
-        <div class="user-element conversation-element" [class.active-now]="conversation.activeNow">
+        <div class="user-element conversation-element" [class.active-now]="conversation.activeNow" [class.typing]="conversation.isTyping" (click)="conversationClick(conversation)">
             @switch(conversation.type){
                 @case ('private') {<div class="profile-image" [style.background-image]="conversation.conversationImageQuery"></div>}
                 @case ('group') {
@@ -20,10 +20,21 @@
                 }
                 @default {<div class="profile-image default-image"></div>}
             }
-            
+            @if(conversation.isTyping){
+                <div class="typing-animation">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            }
             <div class="labels">
                 <span class="name medium-text">{{conversation.conversationName}}</span>
-                <span class="message small-text conversation-last-message">{{conversation.message}}</span>
+                @if(conversation.isTyping){
+                    <span class="message small-text conversation-last-message">{{conversation.users[0].username}} is typing...</span>
+                }
+                @else {
+                    <span class="message small-text conversation-last-message">{{conversation.message}}</span>
+                }
             </div>
         </div>
       }
