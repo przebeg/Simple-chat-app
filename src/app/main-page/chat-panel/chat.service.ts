@@ -1,30 +1,36 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable} from '@angular/core';
+import { NavigationStart, Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
-import { BehaviorSubject, debounceTime, Observable, merge, of, timer, map, switchMap, distinctUntilChanged, delayWhen, startWith, skip } from 'rxjs';
+import { BehaviorSubject, filter, debounceTime, Observable, merge, of, timer, map, switchMap, distinctUntilChanged, delayWhen, startWith, skip, Subject } from 'rxjs';
 import { FriendsService } from '../friends-panel/friends.service';
-import { ConversationsService, Conversation, MessageInterface } from '../conversations-panel/conversations.service';
+import { ConversationsService, Conversation} from '../conversations-panel/conversations.service';
 @Injectable({
   providedIn: 'root'
 })
 
 export class ChatService {
 
-  public messages: Array<MessageInterface> = [];
   public userMessage$: BehaviorSubject<string> = new BehaviorSubject<string>('');
+  public currentConversation$: BehaviorSubject<Conversation | null> = new BehaviorSubject<Conversation | null>(null);
   private currentConversation: Conversation | null = null;
 
   private webSocket = new Socket();
 
+  static _conversationService: ConversationsService;
+
   constructor(private httpClient: HttpClient, private friendsService: FriendsService, private conversationsService: ConversationsService) { 
+
+    //set statics
+    ChatService._conversationService = this.conversationsService;
 
     //get friends
     this.friendsService.getFriendsAndRequests();
 
     //subscribe to conversation change
     this.conversationsService.activeConversation$.subscribe((activeConversation: Conversation) => {
+      this.currentConversation$.next(activeConversation)
       this.currentConversation = activeConversation;
-      this.conversationsService.getConversationMessages(activeConversation);
     })
 
     //when user is typing
@@ -37,7 +43,7 @@ export class ChatService {
       ),
       skip(1),
       distinctUntilChanged() 
-    ).pipe(debounceTime(300)).subscribe((isUserTyping) => {
+    ).pipe(debounceTime(600)).subscribe((isUserTyping) => {
       if(!this.currentConversation)
         return;
 
@@ -53,7 +59,13 @@ export class ChatService {
   //on message input change (when user is typing)
   public onMessageInputChange(message: string) {
     this.userMessage$.next(message);
-    console.log(message)
+  }
+
+  //set friend or conversation typing
+  public static setTyping(subjectId: string, isTyping: boolean) {
+
+    //delegate to conversations service
+    ConversationsService.setTyping(subjectId, isTyping, ChatService._conversationService);
   }
 
   //TO BE DELETED
@@ -83,8 +95,20 @@ class Socket {
       this.webSocketOpen$.next(false);
     }
 
-    this.webSocket.onmessage = (a) => {
-      console.log(a)
+    this.webSocket.onmessage = (_event) => {
+      const event = JSON.parse(_event.data.toString()) as WebSocketEvent;
+
+      //switch event type
+      switch (event.eventType) {
+        case WebSocketEventType.UserTyping: 
+
+          console.log(event.subjectId)
+
+
+          //set friend typing
+          ChatService.setTyping(event.subjectId, event.state);
+        break;
+      }
     }
   }
 
@@ -103,6 +127,19 @@ interface WebSocketEvent {
   content: string,
   subjectId: string,
   state: any
+}
+
+export interface MessageEmojisSet {
+  type: string //emoji type
+  count: number
+}
+
+export interface MessageInterface {
+  senderId: string,
+  content: string,
+  timestamp: Date,
+  emojis: Array<MessageEmojisSet>
+  self: boolean
 }
 
 

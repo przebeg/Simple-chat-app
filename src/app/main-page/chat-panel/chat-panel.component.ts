@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { ChatService} from './chat.service';
-import { ConversationsService, MessageInterface } from '../conversations-panel/conversations.service';
+import { ChatService, MessageInterface} from './chat.service';
+import { Conversation, ConversationsService } from '../conversations-panel/conversations.service';
 import { NavigationEnd, Router } from '@angular/router';
-import { BehaviorSubject, debounceTime, filter, Observable } from 'rxjs';
+import { BehaviorSubject, debounceTime, filter, Observable, Subject } from 'rxjs';
 
 @Component({
   selector: 'chat-panel',
@@ -13,13 +13,18 @@ import { BehaviorSubject, debounceTime, filter, Observable } from 'rxjs';
 
 export class ChatPanelComponent {
 
-  conversationId: string = '';
-  messages: Array<MessageInterface>;
-  typedMessage$: BehaviorSubject<string> = new BehaviorSubject('');
+  public messages: Array<MessageInterface> = [];
+  private currentConversation: Conversation | null = null;
+  public typedMessage$: BehaviorSubject<string> = new BehaviorSubject('');
 
   constructor (private chatService: ChatService, private conversationsService: ConversationsService, private router: Router) {
 
-    this.messages = chatService.messages;
+    this.chatService.currentConversation$.subscribe(_currentConversation => {
+      this.currentConversation = _currentConversation;
+      this.messages = this.currentConversation?.messages!;
+      //console.log(_currentConversation)
+    })
+    
 
   }
 

@@ -10,13 +10,15 @@
     </div>
     <div class="global-horizontal-divider"></div>
     <div id="chats-container">
-        @for(message of messages; track message.content){
-            <div class="message" [class.self]="message.self">
-                <div class="user-element">
-                    <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + message.senderId + '), url(' + '/assets/profile-image-placeholder.png' + ')'"></div>
+        @if(messages){
+            @for(message of messages; track message.content){
+                <div class="message" [class.self]="message.self">
+                    <div class="user-element">
+                        <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + message.senderId + '), url(' + '/assets/profile-image-placeholder.png' + ')'"></div>
+                    </div>
+                    <span class="message-content small-text text-left">{{message.content}}</span>
                 </div>
-                <span class="message-content small-text text-left">{{message.content}}</span>
-            </div>
+            }
         }
     </div>
     <div id="message-input-bar">

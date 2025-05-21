@@ -5,6 +5,7 @@ import { Friend, FriendsService } from '../friends-panel/friends.service';
 import { SsrCookieService } from 'ngx-cookie-service-ssr';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
+import { MessageInterface } from '../chat-panel/chat.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,8 @@ export class ConversationsService {
   conversations$: BehaviorSubject<Array<Conversation> | any> = new BehaviorSubject([]);
   allowPlaceholder$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   activeConversation$: Subject<Conversation> = new Subject();
+
+  private static _conversations: Array<Conversation> = [];
 
   constructor(private router: Router, private httpClient: HttpClient, private friendsService: FriendsService, private ssrCookieService: SsrCookieService) {
 
@@ -31,6 +34,27 @@ export class ConversationsService {
       _conversations.forEach(conversation => this.getActiveAvailable(conversation));
       this.conversations$.next(this.conversations$.value);
     });
+
+    //on conversations$ update, update static _conversation$
+    this.conversations$.subscribe(conversations => {
+      ConversationsService._conversations = [...conversations];
+    });
+  }
+
+  //get conversation type, group or private
+  public static getConversationType(_conversation: string | Conversation): ConversationType {
+
+    if(typeof _conversation !== 'string')
+      return _conversation.type;
+
+    let conversationId = _conversation;
+
+    if (ConversationsService._conversations.findIndex(conversation => conversation.id === conversationId) >= 0)
+      return 'group';
+    else if (ConversationsService._conversations.findIndex(conversation => conversation.users[0].id === conversationId && conversation.users.length === 1))
+      return 'private';
+
+    return 'unknown';
   }
 
   //get active available and last active of conversation. If type is Conversation, change argument object, else if ConversationResponse, return object
@@ -88,7 +112,8 @@ export class ConversationsService {
           ...[], //start with empty message list
           ...(this.friendsService.friendsLoadingInProgress$.value? //if friends are loaded get activeNows, else set default
                 {activeAvailable: false, lastActive: 0} :  
-                this.getActiveAvailable(conversation))
+                this.getActiveAvailable(conversation)),
+          isTyping: false,
         })}))
 
         this.conversationsLoadingInProgress$.next(false);
@@ -111,12 +136,12 @@ export class ConversationsService {
   //get messages of conversation by Id
   public getConversationMessages(conversation: Conversation) {
 
-    const conversationIndex = (this.conversations$.value as Array<Conversation>).findIndex(conversation => conversation.id === conversation.id);
+    const conversationIndex = conversation.type === 'private'? (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.users[0].id === conversation.users[0].id) : (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.id === conversation.id);
     const _conversation = this.conversations$.value[conversationIndex];
+    const subjectId = conversation.type === 'private'? conversation.users[0].id : conversation.id;
 
-    if(conversation){
-      const subjectId = (_conversation.type === 'private'? _conversation.users[0] : _conversation.id)
-      this.httpClient.get<{state: string, message: string, messages: Array<MessageInterface>}>('api/express/conversations/getConversationMessages', {withCredentials: true, params: new HttpParams().set('subjectId', _conversation.id)}).subscribe(response => {
+    if(_conversation){
+      this.httpClient.get<{state: string, message: string, messages: Array<MessageInterface>}>('api/express/conversations/getConversationMessages', {withCredentials: true, params: new HttpParams().set('conversationId', subjectId)}).subscribe(response => {
         if(response.state === 'success'){
 
           //assign messages to conversation
@@ -126,12 +151,43 @@ export class ConversationsService {
           const _conversations = [...this.conversations$.value];
           _conversations.splice(conversationIndex, 1, _conversation);
 
-          this.conversations$.next(_conversations)
+          this.conversations$.next(_conversations);
+          this.activeConversation$.next(_conversation);
         }
       });
     }
   }
+
+  //set friend or group typing
+  public static setTyping(subjectId: string, isTyping: boolean, _conversationsService: ConversationsService) {
+
+    const _conversations = [..._conversationsService.conversations$.value];
+
+    //find type, group or private
+    const conversationType = ConversationsService.getConversationType(subjectId);
+    switch(conversationType) {
+      case 'private':
+        const conversationIndex = _conversations.findIndex(conversation => conversation.users[0].id === subjectId && conversation.users.length === 1);
+        if(conversationIndex >= 0){
+          let conversation = {..._conversations[conversationIndex]};
+          conversation.isTyping = isTyping;
+
+          //update
+          _conversations.splice(conversationIndex, 1, conversation);
+          _conversationsService.conversations$.next(_conversations);
+        }
+      break;
+    }
+  }
+
+  public setActiveConversation(conversation: Conversation) {
+
+    //get active conversations message and update
+    this.getConversationMessages(conversation);
+  }
 }
+
+export type ConversationType = 'private' | 'group' | 'unknown';
 
 interface ConversationResponse {
   id: string,
@@ -143,25 +199,13 @@ interface ConversationResponse {
     timestamp: Date,
     emojis: Array<string>
   }
-  type: string,
+  type: ConversationType,
   name: string
 }
 
 export interface Conversation extends ConversationResponse {
   messages: Array<MessageInterface>,
   activeAvailable: boolean
-  lastActive: Date
-}
-
-export interface MessageEmojisSet {
-  type: string //emoji type
-  count: number
-}
-
-export interface MessageInterface {
-  senderId: string,
-  content: string,
-  timestamp: Date,
-  emojis: Array<MessageEmojisSet>
-  self: boolean
+  lastActive: Date,
+  isTyping: boolean
 }

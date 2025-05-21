@@ -33,7 +33,6 @@ export class ConversationsPanelComponent {
         conversationName: this.conversationNameBuilder(conversation),
         message: this.conversationLastMessageBuilder(conversation),
         activeNow: this.getActiveNow(conversation),
-        isTyping: false
       })});
     });
 
@@ -96,6 +95,7 @@ export class ConversationsPanelComponent {
     const lastMessageDate = new Date(lastMessage.timestamp);
     const lastMessageUserIndex = conversation.users.findIndex(user => user.id === lastMessage.senderId)!;
     let lastMessageUserUsername: string;
+    let _lastMessageContent: string = lastMessage.content;
 
     //check if last message was sent by this user
     if(lastMessageUserIndex < 0)
@@ -103,7 +103,19 @@ export class ConversationsPanelComponent {
     else
       lastMessageUserUsername = conversation.users[lastMessageUserIndex].username;
 
-    let message: string = lastMessageUserUsername + ': ' + lastMessage.content + ' · ';
+    //trim user and message text
+    const maxCombinedLenght = 40;
+    const maxSingleLength = 30;
+    if(lastMessageUserUsername.length > maxSingleLength){
+      lastMessageUserUsername = lastMessageUserUsername.substring(0, maxSingleLength - 4) + '... ';
+      if(lastMessageUserUsername.length + _lastMessageContent.length > maxCombinedLenght)
+        _lastMessageContent = _lastMessageContent.substring(0, 6) + '...';
+    }
+    if(_lastMessageContent.length > maxSingleLength){
+      _lastMessageContent = _lastMessageContent.substring(0, maxSingleLength - 4) + '...';
+    }
+
+    let message: string = lastMessageUserUsername + ': ' + _lastMessageContent + ' · ';
     const timeDiff: number = Date.now() - lastMessageDate.getTime();
 
     //get day suffix
@@ -148,10 +160,8 @@ export class ConversationsPanelComponent {
     this.router.navigate(['conversations', `@${conversation.type === 'private'? conversation.users[0].id: conversation.id}`]);
 
     //change active conversation in service
-    this.conversationsService.activeConversation$.next(conversation);
+    this.conversationsService.setActiveConversation(conversation)
   }
-
-
 
 }
 
