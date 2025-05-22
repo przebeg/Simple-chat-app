@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { FriendConversationLoadingPlaceholderComponent } from '../friend-conversation-loading-placeholder/friend-conversation-loading-placeholder.component';
 import { HttpClient} from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ConversationsService, Conversation } from './conversations.service';
-import { debounceTime } from 'rxjs';
+import { BehaviorSubject, debounceTime, Subject } from 'rxjs';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'conversations-panel',
@@ -23,7 +25,7 @@ export class ConversationsPanelComponent {
 
   conversations: Array<ConversationHTMLData> = [];
 
-  constructor (private router: Router, private httpClient: HttpClient, private conversationsService: ConversationsService) {
+  constructor (@Inject(PLATFORM_ID) private platformId: Object, private router: Router, private httpClient: HttpClient, private conversationsService: ConversationsService) {
     
     //on conversation$ update
     this.conversationsService.conversations$.subscribe(conversations => {
@@ -34,7 +36,11 @@ export class ConversationsPanelComponent {
         message: this.conversationLastMessageBuilder(conversation),
         activeNow: this.getActiveNow(conversation),
       })});
+
+      //export data (via conversations service)
+      this.conversationsService.conversationsData$.next(this.conversations);
     });
+
 
     //search conversation with search bar, searching by conversation name
     this.searchFormControl.valueChanges.pipe(debounceTime(300)).subscribe(searchQuery => {
@@ -45,6 +51,7 @@ export class ConversationsPanelComponent {
         
     })
   }
+
 
   //build background image style query
   private conversationBackgroundStyleQuery(conversation: Conversation): string {
@@ -156,6 +163,10 @@ export class ConversationsPanelComponent {
   //navigate to clicked conversation
   public conversationClick(conversation: Conversation) {
 
+    //set to localStorage
+    if(window.localStorage && isPlatformBrowser(this.platformId))
+      window.localStorage.setItem('lastActiveConversation', conversation.type === 'private'? conversation.users[0].id : conversation.id);
+
     //navigate
     this.router.navigate(['conversations', `@${conversation.type === 'private'? conversation.users[0].id: conversation.id}`]);
 
@@ -165,7 +176,7 @@ export class ConversationsPanelComponent {
 
 }
 
-interface ConversationHTMLData extends Conversation {
+export interface ConversationHTMLData extends Conversation {
   conversationImageQuery: string,
   conversationName: string,
   message: string,

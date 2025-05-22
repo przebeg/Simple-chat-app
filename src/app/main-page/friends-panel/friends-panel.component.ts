@@ -65,7 +65,7 @@ export class FriendsPanelComponent {
   }
 
   //set last active message string
-  private setLastActiveMessage(friend: Friend) {
+  public setLastActiveMessage(friend: Friend) {
 
     const timeDiff = Date.now() - new Date(friend.lastActive).getTime();
     friend.activeNow = false;

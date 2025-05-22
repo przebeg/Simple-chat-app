@@ -43,7 +43,7 @@ export class FriendsService {
   }
 
   //silent update friends list
-  public updateFriendsListSilent() {
+  private updateFriendsListSilent() {
     //request
     this.httpClient.get<{state: string, friendsCount: number, friends: Array<Friend>, incomingFriendsRequests: Array<FriendRequest>}>('api/express/user/friends/getFriendsList',{
       withCredentials: true

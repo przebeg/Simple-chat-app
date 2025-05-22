@@ -60,6 +60,24 @@ textarea {
   min-width: 470px;
 }
 
+.user-element.chat-element .profile-image.group-image{
+  position: relative;
+  border-radius: 0;
+  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 130%;
+  width: auto;
+  aspect-ratio: 1;
+}
+
+.user-element.chat-element .profile-image.group-image .group-user-image {
+  width: 50%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
 
 .message {
   display: flex;

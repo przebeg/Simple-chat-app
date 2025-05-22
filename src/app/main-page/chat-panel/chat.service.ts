@@ -31,6 +31,21 @@ export class ChatService {
     this.conversationsService.activeConversation$.subscribe((activeConversation: Conversation) => {
       this.currentConversation$.next(activeConversation)
       this.currentConversation = activeConversation;
+    });
+
+    //subscribe to updating all conversations (for pooling purposer mainly)
+    this.conversationsService.conversations$.subscribe(conversations => {
+
+      if(Array.isArray(conversations) && conversations.length > 0 && conversations[0].id && this.currentConversation){
+        
+        //find and update only current conversation, here we can always search by ID, for public and groups
+        const newCurrentConversation = (conversations as Array<Conversation>).find(conversation => conversation.id === this.currentConversation!.id);
+
+        if(newCurrentConversation){
+          this.currentConversation = newCurrentConversation;
+          this.currentConversation$.next(newCurrentConversation);
+        }
+      }
     })
 
     //when user is typing
@@ -67,13 +82,6 @@ export class ChatService {
     //delegate to conversations service
     ConversationsService.setTyping(subjectId, isTyping, ChatService._conversationService);
   }
-
-  //TO BE DELETED
-  //get conversation content (messages), search it by user and subject IDs
-  // getConversationMessages(subjectId: string): Observable<{state: string, message: string, messages: Array<MessageInterface>}> {
-  //   return this.httpClient.get<{state: string, message: string, messages: Array<MessageInterface>}>('api/express/conversations/getConversationMessages', {withCredentials: true, params: new HttpParams().set('subjectId', subjectId)})
-  // }
-  //
 }
 
 //class for handling webSocket

@@ -1,11 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject, filter} from 'rxjs';
+import { Inject, Injectable } from '@angular/core';
+import { BehaviorSubject, Subject, interval} from 'rxjs';
 import { Friend, FriendsService } from '../friends-panel/friends.service';
 import { SsrCookieService } from 'ngx-cookie-service-ssr';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
 import { MessageInterface } from '../chat-panel/chat.service';
+import { ConversationHTMLData } from './conversations-panel.component';
+import { PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -17,9 +20,12 @@ export class ConversationsService {
   allowPlaceholder$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   activeConversation$: Subject<Conversation> = new Subject();
 
+  //for data export
+  public conversationsData$: BehaviorSubject<Array<ConversationHTMLData>> = new BehaviorSubject<Array<ConversationHTMLData>>([]);
+
   private static _conversations: Array<Conversation> = [];
 
-  constructor(private router: Router, private httpClient: HttpClient, private friendsService: FriendsService, private ssrCookieService: SsrCookieService) {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, private router: Router, private httpClient: HttpClient, private friendsService: FriendsService, private ssrCookieService: SsrCookieService) {
 
     //get conversations
     this.getConversations();
@@ -117,11 +123,12 @@ export class ConversationsService {
         })}))
 
         this.conversationsLoadingInProgress$.next(false);
-        this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0)
+        this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0);
 
-        //navigate to first conversation
-        this.router.navigate(['conversations', '@' + this.conversations$.value[0].id]);
-        this.activeConversation$.next(this.conversations$.value[0])
+        this.setLandingConversation();
+        
+        //pooling for silent friends list update
+        interval(5000).subscribe(() => this.updateConversationsSilent());
       }
     });
 
@@ -133,10 +140,69 @@ export class ConversationsService {
 
   }
 
+  //on landing set active conversation and chat
+  public setLandingConversation() {
+
+    //check for conversation id in url
+    const conversationUrlId = this.router.url.split('@').at(-1);
+    const conversations = this.conversations$.value as Array<Conversation>;
+    let conversation;
+    
+    //try to find group, then private conversation
+    if(conversationUrlId && conversationUrlId.length > 0){
+
+      conversation = conversations.find(_conversation => _conversation.id === conversationUrlId);
+      if(!conversation)
+        conversation = conversations.find(_conversation => _conversation.users[0].id === conversationUrlId);
+
+      //if found, set as active
+      if(conversation){
+        this.setActiveConversation(conversation);
+        return;
+      }
+
+      //when not found set first of array
+      this.setActiveConversation(conversations[0]);
+      return;
+    }
+
+    //try to get ID from local storage
+    if(window.localStorage && isPlatformBrowser(this.platformId)){
+
+      const conversationLocalStorageID = window.localStorage.getItem('lastActiveConversation');
+
+      if(conversationLocalStorageID && conversationLocalStorageID.length > 1){
+
+        //try to find group, then private first
+        conversation = conversations.find(_conversation => _conversation.id === conversationLocalStorageID);
+
+        if(!conversation)
+          conversation = conversations.find(_conversation => _conversation.users[0].id === conversationLocalStorageID);
+
+        //if found select and navigate
+        if(conversation){
+          this.router.navigate(['conversations', '@' + conversation.type === 'private'? conversation.users[0].id : conversation.id]);
+          this.setActiveConversation(conversation);
+        }
+
+        //else set first as active
+        else {
+          this.setActiveConversation(conversations[0]);
+        }
+      }
+      else{
+        this.setActiveConversation(conversations[0]);
+      }
+    }
+    else {
+      this.setActiveConversation(conversations[0]);
+    }
+  }
+
   //get messages of conversation by Id
   public getConversationMessages(conversation: Conversation) {
 
-    const conversationIndex = conversation.type === 'private'? (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.users[0].id === conversation.users[0].id) : (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.id === conversation.id);
+    const conversationIndex = conversation.type === 'private'? (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.users[0].id === conversation.users[0].id && __conversation.users.length === 1) : (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.id === conversation.id);
     const _conversation = this.conversations$.value[conversationIndex];
     const subjectId = conversation.type === 'private'? conversation.users[0].id : conversation.id;
 
@@ -180,10 +246,36 @@ export class ConversationsService {
     }
   }
 
+  //proxying when setting active conversation
   public setActiveConversation(conversation: Conversation) {
 
     //get active conversations message and update
     this.getConversationMessages(conversation);
+  }
+
+  //pooling conversations
+  private updateConversationsSilent() {
+     
+    //request
+    const response$ = this.httpClient.get<{state: string, message: string, conversations: Array<ConversationResponse>}>('api/express/conversations/getConversations', {
+      withCredentials: true, 
+    });
+    
+    response$.subscribe(response => {
+      if(response.state === 'success'){
+        this.conversations$.next(response.conversations.map(conversation => {return({
+          ...conversation,
+          ...[], //start with empty message list
+          ...(this.friendsService.friendsLoadingInProgress$.value? //if friends are loaded get activeNows, else set default
+                {activeAvailable: false, lastActive: 0} :  
+                this.getActiveAvailable(conversation)),
+          isTyping: false,
+        })}))
+
+        this.conversationsLoadingInProgress$.next(false);
+        this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0);
+      }
+    });
   }
 }
 

@@ -1,10 +1,22 @@
 <div id="chat-panel-wrapper">
     <div id="top-panel">
-        <div class="user-element active-now">
-            <div class="profile-image" [style.background-image]="'url(' + '/assets/profile-image-placeholder.png' + ')'"></div>
+        <div class="user-element chat-element" [class.active-now]="conversationActiveNow">
+            @if(currentConversation){
+                @switch(currentConversation!.type){
+                    @case ('private') {<div class="profile-image" [style.background-image]="conversationImageQuery"></div>}
+                    @case ('group') {
+                        <div class="profile-image group-image">
+                            @for(user of currentConversation!.users; track user){
+                                <div class="profile-image group-user-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
+                            }
+                        </div>
+                    }
+                @default {<div class="profile-image default-image"></div>}
+            }
+            }
             <div class="labels">
-                <span class="name medium-text">Andrzej</span>
-                <span class="message small-text">Active Now</span>
+                <span class="name medium-text">{{conversationTitle}}</span>
+                <span class="message small-text">{{conversationSubtitle}}</span>
             </div>
         </div>
     </div>
