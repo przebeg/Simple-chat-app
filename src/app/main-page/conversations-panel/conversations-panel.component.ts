@@ -3,7 +3,7 @@ import { FriendConversationLoadingPlaceholderComponent } from '../friend-convers
 import { HttpClient} from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ConversationsService, Conversation } from './conversations.service';
-import { BehaviorSubject, debounceTime, Subject } from 'rxjs';
+import { BehaviorSubject, debounceTime, Subject, filter } from 'rxjs';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
@@ -41,8 +41,7 @@ export class ConversationsPanelComponent {
       this.conversationsService.conversationsData$.next(this.conversations);
     });
 
-
-    //search conversation with search bar, searching by conversation name
+    //search conversation with search bar, searching by conversation name TODO
     this.searchFormControl.valueChanges.pipe(debounceTime(300)).subscribe(searchQuery => {
       if(searchQuery.length < 3) //minimum 3 chars
         return;
@@ -51,7 +50,6 @@ export class ConversationsPanelComponent {
         
     })
   }
-
 
   //build background image style query
   private conversationBackgroundStyleQuery(conversation: Conversation): string {

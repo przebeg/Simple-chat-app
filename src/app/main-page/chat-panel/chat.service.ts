@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable} from '@angular/core';
 import { NavigationStart, Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
-import { BehaviorSubject, filter, debounceTime, Observable, merge, of, timer, map, switchMap, distinctUntilChanged, delayWhen, startWith, skip, Subject } from 'rxjs';
+import { BehaviorSubject, takeUntil, zipWith, debounceTime, Observable, merge, of, timer, map, switchMap, distinctUntilChanged, delayWhen, startWith, skip, Subject, interval } from 'rxjs';
 import { FriendsService } from '../friends-panel/friends.service';
 import { ConversationsService, Conversation} from '../conversations-panel/conversations.service';
 @Injectable({
@@ -14,6 +14,7 @@ export class ChatService {
   public userMessage$: BehaviorSubject<string> = new BehaviorSubject<string>('');
   public currentConversation$: BehaviorSubject<Conversation | null> = new BehaviorSubject<Conversation | null>(null);
   private currentConversation: Conversation | null = null;
+  private isUserTyping: boolean = false;
 
   private webSocket = new Socket();
 
@@ -35,20 +36,23 @@ export class ChatService {
 
     //subscribe to updating all conversations (for pooling purposer mainly)
     this.conversationsService.conversations$.subscribe(conversations => {
-
       if(Array.isArray(conversations) && conversations.length > 0 && conversations[0].id && this.currentConversation){
         
         //find and update only current conversation, here we can always search by ID, for public and groups
         const newCurrentConversation = (conversations as Array<Conversation>).find(conversation => conversation.id === this.currentConversation!.id);
+        
+        if(newCurrentConversation) {
 
-        if(newCurrentConversation){
+          //set saved messages to new conversation after pooling and then pool messages
+          newCurrentConversation.messages = this.currentConversation.messages;
+
           this.currentConversation = newCurrentConversation;
           this.currentConversation$.next(newCurrentConversation);
         }
       }
     })
 
-    //when user is typing
+
     this.userMessage$.pipe(
       switchMap(() => 
         merge(
@@ -56,19 +60,29 @@ export class ChatService {
           timer(500).pipe(map(() => false))
         )
       ),
-      skip(1),
-      distinctUntilChanged() 
+      skip(2),
+      distinctUntilChanged()
     ).pipe(debounceTime(600)).subscribe((isUserTyping) => {
+      if(!this.currentConversation)
+        return;
+
+      this.isUserTyping = isUserTyping;
+    });
+
+    //interval for sending ws typing events
+    interval(1000).subscribe(() => {
+
       if(!this.currentConversation)
         return;
 
       this.webSocket.emitEvent({
         eventType: WebSocketEventType.UserTyping,
         content: '',
+        conversationId: this.currentConversation.type === 'group'? this.currentConversation.id : '',
         subjectId: this.currentConversation.type === 'private'? this.currentConversation.users[0].id : this.currentConversation.id,
-        state: isUserTyping
+        state: this.isUserTyping
       });
-    });
+    })
   }
 
   //on message input change (when user is typing)
@@ -77,10 +91,11 @@ export class ChatService {
   }
 
   //set friend or conversation typing
-  public static setTyping(subjectId: string, isTyping: boolean) {
+  public static setTyping(typingEvent: TypingInfo) {
+
 
     //delegate to conversations service
-    ConversationsService.setTyping(subjectId, isTyping, ChatService._conversationService);
+    ConversationsService.setTyping(typingEvent, ChatService._conversationService);
   }
 }
 
@@ -89,6 +104,7 @@ class Socket {
 
   private webSocket!: WebSocket;
   public webSocketOpen$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  public isTypingInfo: Array<BehaviorSubject<TypingInfo>> = [];
 
   constructor () {
 
@@ -110,11 +126,9 @@ class Socket {
       switch (event.eventType) {
         case WebSocketEventType.UserTyping: 
 
-          console.log(event.subjectId)
-
 
           //set friend typing
-          ChatService.setTyping(event.subjectId, event.state);
+          ChatService.setTyping({conversationId: event.conversationId, subjectId: event.subjectId, typing: event.state});
         break;
       }
     }
@@ -133,6 +147,7 @@ enum WebSocketEventType {
 interface WebSocketEvent {
   eventType: WebSocketEventType,
   content: string,
+  conversationId: string | undefined,
   subjectId: string,
   state: any
 }
@@ -148,6 +163,12 @@ export interface MessageInterface {
   timestamp: Date,
   emojis: Array<MessageEmojisSet>
   self: boolean
+}
+
+export interface TypingInfo {
+  conversationId: string | undefined, //for group conversations
+  subjectId: string,
+  typing: boolean
 }
 
 
