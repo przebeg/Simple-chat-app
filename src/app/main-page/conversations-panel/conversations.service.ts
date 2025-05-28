@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Subject, debounceTime, interval, filter, take, pipe, switchAll, pairwise, Subscription} from 'rxjs';
+import { BehaviorSubject, skip, Subject, merge, timer, map, debounceTime, interval, filter, take, pipe, switchAll, pairwise, Subscription, switchMap, startWith, ReplaySubject, takeUntil} from 'rxjs';
 import { Friend, FriendsService } from '../friends-panel/friends.service';
 import { SsrCookieService } from 'ngx-cookie-service-ssr';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
@@ -44,26 +44,30 @@ export class ConversationsService {
     });
 
     //on conversations$ update
-    this.conversations$.pipe(pairwise()).subscribe(([prevConversations, nextConversations]) => {
+    this.conversations$.pipe(skip(1)).subscribe((conversations) => {
 
       //update static _conversation$
-      ConversationsService._conversations = [...nextConversations];
+      ConversationsService._conversations = [...conversations];
+      console.log('subscription');
+      (conversations as Array<Conversation>).forEach(conversation => {
 
-      //unsubscribe previous isTyping$
-      (prevConversations as Array<Conversation>).forEach(prevConversation => {
-        if(prevConversation.isTyping$ && prevConversation.isTyping$ instanceof Subscription)
-          prevConversation.isTyping$.unsubscribe();
-      });
-
-      //subscribe to next values of isTyping$
-      (nextConversations as Array<Conversation>).forEach(nextConversation => {
-        nextConversation.isTyping$.pipe(
-          filter(value => value === true),
-          debounceTime(2000)
-        ).subscribe((value) => {
-          console.log(value)
+        conversation.users.forEach(user => {
+          user.isTyping$.pipe(
+            switchMap(() => 
+              merge(
+                [true],
+                timer(1000).pipe(map(() => false))
+              )
+            )
+          ).subscribe(isTyping => {
+            console.log('x')
+            if(!isTyping){
+              ConversationsService.setTyping({conversationId: conversation.id, senderId: user.id, typing: false}, this)
+            }
+          })
         })
       })
+
     });
 
   }
@@ -134,14 +138,19 @@ export class ConversationsService {
     
     response$.subscribe(response => {
       if(response.state === 'success'){
+        console.log('conversations')
         this.conversations$.next(response.conversations.map(conversation => {return({
           ...conversation,
           ...[], //start with empty message list
           ...(this.friendsService.friendsLoadingInProgress$.value? //if friends are loaded get activeNows, else set default
                 {activeAvailable: false, lastActive: 0} :  
                 this.getActiveAvailable(conversation)),
-          isTyping: false,
-          isTyping$: new Subject<boolean>()
+          users: conversation.users.map(_user => {return({
+            id: _user.id,
+            username: _user.username,
+            isTyping: false,
+            isTyping$: new Subject<boolean>()
+          })})
         })}))
 
         this.conversationsLoadingInProgress$.next(false);
@@ -251,23 +260,26 @@ export class ConversationsService {
   //set friend or group typing
   public static setTyping(typingInfo: TypingInfo, _conversationsService: ConversationsService) {
 
+    console.log(typingInfo)
+    //find conversation by id
     const _conversations = [..._conversationsService.conversations$.value];
 
-    //find type, group or private
-    const conversationType = ConversationsService.getConversationType(typingInfo.subjectId);
-    switch(conversationType) {
-      case 'private':
-        const conversationIndex = _conversations.findIndex(conversation => conversation.users[0].id === typingInfo.subjectId && conversation.users.length === 1);
-        if(conversationIndex >= 0){
-          let conversation = {..._conversations[conversationIndex]};
-          conversation.isTyping$.next(typingInfo.typing);
-          conversation.isTyping = typingInfo.typing;
+    const conversationIndex = (_conversations as Array<Conversation>).findIndex(conversation => conversation.id === typingInfo.conversationId);
 
-          //update
-          _conversations.splice(conversationIndex, 1, conversation);
-          _conversationsService.conversations$.next(_conversations);
-        }
-      break;
+    if(conversationIndex >= 0){
+      const conversation = _conversations[conversationIndex] as Conversation;
+
+      //update users typing
+      const conversationUser = conversation.users.find(user => user.id === typingInfo.senderId);
+
+      if(conversationUser){
+
+        conversationUser.isTyping = typingInfo.typing;
+
+        //update
+        _conversations.splice(conversationIndex, 1, conversation);
+        _conversationsService.conversations$.next(_conversations);
+      }
     }
   }
 
@@ -280,7 +292,7 @@ export class ConversationsService {
 
   //pooling conversations
   private updateConversationsSilent() {
-
+    return
     //request
     const response$ = this.httpClient.get<{state: string, message: string, conversations: Array<ConversationResponse>}>('api/express/conversations/getConversations', {
       withCredentials: true, 
@@ -292,10 +304,10 @@ export class ConversationsService {
 
           //get conversation twin from previously saved conversations
           const conversationTwin = (this.conversations$.value as Array<Conversation>).find(_conversation => _conversation.id === conversation.id)
-          
-          //if twin is typing, emit isTyping$ true
-          if(conversationTwin?.isTyping)
-            conversationTwin.isTyping$.next(true);
+
+          //unsubscribe previous isTyping$ s
+          if(conversationTwin)
+            conversationTwin.users.forEach(user => user.isTyping$.complete());
 
           //return new conversation (updated by pooling)
           return({
@@ -304,8 +316,12 @@ export class ConversationsService {
             ...(this.friendsService.friendsLoadingInProgress$.value? //if friends are loaded get activeNows, else set default
                 {activeAvailable: false, lastActive: 0} :  
                 this.getActiveAvailable(conversation)),
-            isTyping: conversationTwin? conversationTwin.isTyping : false,
-            isTyping$: new Subject<boolean>()
+            users: conversation.users.map(_user => {return({
+              id: _user.id,
+              username: _user.username,
+              isTyping: conversationTwin? conversationTwin.users.find(__user => __user.id === _user.id)?.isTyping : false,
+              isTyping$: new Subject<boolean>()
+            })})
           })
         }));
 
@@ -332,10 +348,9 @@ interface ConversationResponse {
   name: string
 }
 
-export interface Conversation extends ConversationResponse {
+export interface Conversation extends Omit<ConversationResponse, 'users'> {
   messages: Array<MessageInterface>,
+  users: Array<{id: string, username: string, isTyping: boolean, isTyping$: Subject<boolean>}>
   activeAvailable: boolean
   lastActive: Date,
-  isTyping: boolean,
-  isTyping$: Subject<boolean>
 }

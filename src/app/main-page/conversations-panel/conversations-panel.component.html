@@ -30,7 +30,7 @@
             <div class="labels">
                 <span class="name medium-text">{{conversation.conversationName}}</span>
                 @if(conversation.isTyping){
-                    <span class="message small-text conversation-last-message">{{conversation.users[0].username}} is typing...</span>
+                    <span class="message small-text conversation-last-message">{{conversation.isTypingText}}</span>
                 }
                 @else {
                     <span class="message small-text conversation-last-message">{{conversation.message}}</span>

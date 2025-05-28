@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { FriendConversationLoadingPlaceholderComponent } from '../friend-conversation-loading-placeholder/friend-conversation-loading-placeholder.component';
 import { HttpClient} from '@angular/common/http';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ControlEvent, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ConversationsService, Conversation } from './conversations.service';
 import { BehaviorSubject, debounceTime, Subject, filter } from 'rxjs';
 import { Router } from '@angular/router';
@@ -35,10 +35,12 @@ export class ConversationsPanelComponent {
         conversationName: this.conversationNameBuilder(conversation),
         message: this.conversationLastMessageBuilder(conversation),
         activeNow: this.getActiveNow(conversation),
+        isTyping: conversation.users.filter(user => user.isTyping).length > 0,
+        isTypingText: this.typingMessageBuilder(conversation)
       })});
 
       //export data (via conversations service)
-      this.conversationsService.conversationsData$.next(this.conversations);
+      //this.conversationsService.conversationsData$.next(this.conversations); ??????
     });
 
     //search conversation with search bar, searching by conversation name TODO
@@ -158,6 +160,31 @@ export class ConversationsPanelComponent {
     else return false
   }
 
+  //build ...typing message
+  private typingMessageBuilder(conversation: Conversation): string {
+
+    switch(conversation.type){
+      case 'private':
+        if(conversation.users[0].isTyping)
+          return `${conversation.users[0].username} is typing...`;
+        else return '';
+      break;
+      
+      case 'group':
+        if(conversation.users.filter(user => user.isTyping).length === 0)
+          return '';
+        else if(conversation.users.filter(user => user.isTyping).length === 1)
+          return `${conversation.users.find(user => user.isTyping === true)?.username} is typing...`;
+        else if(conversation.users.filter(user => user.isTyping).length > 1)
+          return 'Several people are typing...'
+        return '';
+      break;
+
+      default: return '';
+    }
+  
+  }
+
   //navigate to clicked conversation
   public conversationClick(conversation: Conversation) {
 
@@ -179,6 +206,7 @@ export interface ConversationHTMLData extends Conversation {
   conversationName: string,
   message: string,
   activeNow: boolean,
-  isTyping: boolean
+  isTyping: boolean,
+  isTypingText: string
 }
 

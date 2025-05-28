@@ -72,14 +72,16 @@ export class ChatService {
     //interval for sending ws typing events
     interval(1000).subscribe(() => {
 
-      if(!this.currentConversation)
+      if(!this.currentConversation || !this.isUserTyping)
         return;
+
 
       this.webSocket.emitEvent({
         eventType: WebSocketEventType.UserTyping,
         content: '',
-        conversationId: this.currentConversation.type === 'group'? this.currentConversation.id : '',
-        subjectId: this.currentConversation.type === 'private'? this.currentConversation.users[0].id : this.currentConversation.id,
+        subjectUsers: this.currentConversation.users.map(user => user.id),
+        senderId: "", //to be replaced in backend
+        conversationId: this.currentConversation.id,
         state: this.isUserTyping
       });
     })
@@ -126,9 +128,7 @@ class Socket {
       switch (event.eventType) {
         case WebSocketEventType.UserTyping: 
 
-
-          //set friend typing
-          ChatService.setTyping({conversationId: event.conversationId, subjectId: event.subjectId, typing: event.state});
+          ChatService.setTyping({conversationId: event.conversationId, senderId: event.senderId, typing: event.state});
         break;
       }
     }
@@ -147,8 +147,9 @@ enum WebSocketEventType {
 interface WebSocketEvent {
   eventType: WebSocketEventType,
   content: string,
-  conversationId: string | undefined,
-  subjectId: string,
+  conversationId: string,
+  subjectUsers: Array<string>, //participants IDs
+  senderId: string,
   state: any
 }
 
@@ -166,8 +167,8 @@ export interface MessageInterface {
 }
 
 export interface TypingInfo {
-  conversationId: string | undefined, //for group conversations
-  subjectId: string,
+  conversationId: string,
+  senderId: string,
   typing: boolean
 }
 
