@@ -40,7 +40,7 @@ export class ConversationsPanelComponent {
       })});
 
       //export data (via conversations service)
-      //this.conversationsService.conversationsData$.next(this.conversations); ??????
+      this.conversationsService.conversationsData$.next(this.conversations); 
     });
 
     //search conversation with search bar, searching by conversation name TODO

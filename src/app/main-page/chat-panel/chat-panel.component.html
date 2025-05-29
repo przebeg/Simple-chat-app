@@ -25,16 +25,35 @@
         @if(messages){
             @for(message of messages; track message.content){
                 <div class="message" [class.self]="message.self">
-                    <div class="user-element">
-                        <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + message.senderId + '), url(' + '/assets/profile-image-placeholder.png' + ')'"></div>
-                    </div>
+                    @if(messageGroups.includes($index)){
+                        <div class="user-element">
+                            <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + message.senderId + '), url(' + '/assets/profile-image-placeholder.png' + ')'"></div>
+                        </div>
+                    }
                     <span class="message-content small-text text-left">{{message.content}}</span>
                 </div>
             }
         }
+        @if(currentConversation){
+            @for(user of currentConversation.users; track user.id){
+                @if(user.isTyping){
+                <div class="message typing">
+                    <div class="user-element">
+                        <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id+ '), url(' + '/assets/profile-image-placeholder.png' + ')'"></div>
+                    </div>
+                    <div class="typing-animation">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+                }
+            }
+        }
     </div>
     <div id="message-input-bar">
-        <textarea type="text" placeholder="Send message to andrzej" class="global-text-input" (input)="messageInputChange($event)"></textarea>
+        <div class="global-horizontal-divider"></div>
+        <textarea type="text" [placeholder]="'Send message to ' + (conversationTitle || '')" class="global-text-input" (input)="messageInputChange($event)"></textarea>
         <div id="message-input-buttons-wrapper">
             <div class="small-button"></div>
         </div>

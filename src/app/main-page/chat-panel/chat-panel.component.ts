@@ -5,6 +5,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { BehaviorSubject, debounceTime, filter, Observable, Subject } from 'rxjs';
 import { ConversationHTMLData, ConversationsPanelComponent } from '../conversations-panel/conversations-panel.component';
 import { FriendsService } from '../friends-panel/friends.service';
+import { User } from '../conversations-panel/conversations.service';
 
 @Component({
   selector: 'chat-panel',
@@ -18,6 +19,7 @@ export class ChatPanelComponent {
   public messages: Array<MessageInterface> = [];
   public currentConversation: Conversation | null = null;
   public typedMessage$: BehaviorSubject<string> = new BehaviorSubject('');
+  public messageGroups: Array<number> = new Array<number>(0);
 
   //html bindings elements
   public conversationTitle: string = '';
@@ -32,6 +34,11 @@ export class ChatPanelComponent {
       this.currentConversation = _currentConversation;
       this.messages = this.currentConversation?.messages!;
 
+      //get message groups
+      if(this.currentConversation){
+        this.messageGroups = this.getMessagesGroups(this.currentConversation);
+      }
+
       //get conversationsHTMLData from conversationsService and friendsService
       if(this.conversationsService.conversationsData$.value){
         const _conversation = this.conversationsService.conversationsData$.value.find(conversation => conversation.id === this.currentConversation!.id)
@@ -44,9 +51,48 @@ export class ChatPanelComponent {
         else
           this.conversationSubtitle = '';
       }
-
     });
 
+  }
+
+  //get message groups - message sequences that were sent in a row by the same user
+  private getMessagesGroups(conversation: Conversation): Array<number> {
+
+    if(!conversation)
+      return [];
+    
+    const result = new Array<number>(0);
+    const conversationUsers = conversation.users;
+    const conversationMessages = conversation.messages;
+
+    //get first message's sender, omit this user TODO
+    let startMessageIndex = conversationMessages.findIndex(message => !message.self);
+    let sender = conversationUsers.find(user => user.id === conversationMessages[startMessageIndex].senderId);
+    
+    if(!sender)
+      return [];
+
+    for(let i = startMessageIndex; i < conversationMessages.length; i++){
+      if(conversationMessages[i].senderId !== sender!.id){
+        result.push(i - 1);
+
+        if(!conversationMessages[i].self)
+          sender = conversationUsers.find(user => user.id === conversationMessages[i].senderId);
+      }
+    }
+
+    console.log(result)
+
+    
+    //find next change in message sender, then push to results and update current sender
+    // this.currentConversation?.messages.forEach((message, messageIndex) => {
+    //   if(message.senderId !== sender.id){
+    //     result.push(messageIndex - 1);
+    //     sender = conversationUsers.find(user => user.id === message.senderId)!;
+    //   }
+    // })
+
+    return result;
   }
 
   //on user typing

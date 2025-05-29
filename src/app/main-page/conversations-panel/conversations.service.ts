@@ -1,14 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject, skip, Subject, merge, timer, map, debounceTime, interval, filter, take, pipe, switchAll, pairwise, Subscription, switchMap, startWith, ReplaySubject, takeUntil} from 'rxjs';
+import { BehaviorSubject, last, Subject, merge, timer, map, interval, switchMap, takeUntil} from 'rxjs';
 import { Friend, FriendsService } from '../friends-panel/friends.service';
 import { SsrCookieService } from 'ngx-cookie-service-ssr';
-import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
 import { ChatService, MessageInterface, TypingInfo } from '../chat-panel/chat.service';
 import { ConversationHTMLData } from './conversations-panel.component';
 import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Interface } from 'readline';
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +20,6 @@ export class ConversationsService {
   conversations$: BehaviorSubject<Array<Conversation> | any> = new BehaviorSubject([]);
   allowPlaceholder$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   activeConversation$: Subject<Conversation> = new Subject();
-
-  private conversationTypings$: Array<Subject<boolean>> = []
 
   //for data export
   public conversationsData$: BehaviorSubject<Array<ConversationHTMLData>> = new BehaviorSubject<Array<ConversationHTMLData>>([]);
@@ -43,32 +42,6 @@ export class ConversationsService {
       this.conversations$.next(this.conversations$.value);
     });
 
-    //on conversations$ update
-    this.conversations$.pipe(skip(1)).subscribe((conversations) => {
-
-      //update static _conversation$
-      ConversationsService._conversations = [...conversations];
-      console.log('subscription');
-      (conversations as Array<Conversation>).forEach(conversation => {
-
-        conversation.users.forEach(user => {
-          user.isTyping$.pipe(
-            switchMap(() => 
-              merge(
-                [true],
-                timer(1000).pipe(map(() => false))
-              )
-            )
-          ).subscribe(isTyping => {
-            console.log('x')
-            if(!isTyping){
-              ConversationsService.setTyping({conversationId: conversation.id, senderId: user.id, typing: false}, this)
-            }
-          })
-        })
-      })
-
-    });
 
   }
 
@@ -138,7 +111,6 @@ export class ConversationsService {
     
     response$.subscribe(response => {
       if(response.state === 'success'){
-        console.log('conversations')
         this.conversations$.next(response.conversations.map(conversation => {return({
           ...conversation,
           ...[], //start with empty message list
@@ -151,7 +123,10 @@ export class ConversationsService {
             isTyping: false,
             isTyping$: new Subject<boolean>()
           })})
-        })}))
+        })}));
+
+        //subscribe to users' isTyping$ s
+        (this.conversations$.value as Array<Conversation>).forEach(conversation => this.typingSubscribe(conversation));
 
         this.conversationsLoadingInProgress$.next(false);
         this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0);
@@ -260,7 +235,6 @@ export class ConversationsService {
   //set friend or group typing
   public static setTyping(typingInfo: TypingInfo, _conversationsService: ConversationsService) {
 
-    console.log(typingInfo)
     //find conversation by id
     const _conversations = [..._conversationsService.conversations$.value];
 
@@ -274,6 +248,7 @@ export class ConversationsService {
 
       if(conversationUser){
 
+        conversationUser.isTyping$.next(typingInfo.typing);
         conversationUser.isTyping = typingInfo.typing;
 
         //update
@@ -292,7 +267,7 @@ export class ConversationsService {
 
   //pooling conversations
   private updateConversationsSilent() {
-    return
+
     //request
     const response$ = this.httpClient.get<{state: string, message: string, conversations: Array<ConversationResponse>}>('api/express/conversations/getConversations', {
       withCredentials: true, 
@@ -304,11 +279,11 @@ export class ConversationsService {
 
           //get conversation twin from previously saved conversations
           const conversationTwin = (this.conversations$.value as Array<Conversation>).find(_conversation => _conversation.id === conversation.id)
-
-          //unsubscribe previous isTyping$ s
+          
+          //unsubscribe from previous isTyping$s
           if(conversationTwin)
-            conversationTwin.users.forEach(user => user.isTyping$.complete());
-
+            this.typingUnsubscribe(conversationTwin);
+          
           //return new conversation (updated by pooling)
           return({
             ...conversation,
@@ -325,10 +300,49 @@ export class ConversationsService {
           })
         }));
 
+        //subscribe to users' isTyping$ s
+        (this.conversations$.value as Array<Conversation>).forEach(conversation => this.typingSubscribe(conversation));
+
+        //set all conversations isTyping accordingly
+        (this.conversations$.value as Array<Conversation>).forEach(conversation => {
+          conversation.users.forEach(user => {
+            if(user.isTyping)
+              ChatService.setTyping({conversationId: conversation.id, senderId: user.id, typing: true})
+          })
+        })
+
         this.conversationsLoadingInProgress$.next(false);
         this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0);
       }
     });
+  }
+
+  //subscribe to each user isTyping$
+  private typingSubscribe(conversation: Conversation) {
+
+
+    //subscribe
+    conversation.users.forEach(user => {
+      user.isTyping$.pipe(
+        switchMap(() => 
+          merge(
+            [true],
+            timer(1500).pipe(map(() => false))
+          )
+        ),
+        takeUntil(user.isTyping$.pipe(last(undefined, true)))
+      ).subscribe(isTyping => {
+        if(!isTyping)
+          ConversationsService.setTyping({conversationId: conversation.id, senderId: user.id, typing: false}, this);
+      })
+    })
+  }
+
+  //unsubscribe (or try to do so) to each conversation's user
+  private typingUnsubscribe(conversation: Conversation) {
+    conversation.users.forEach((user) => {
+      user.isTyping$.complete();
+    })
   }
 }
 
@@ -350,7 +364,14 @@ interface ConversationResponse {
 
 export interface Conversation extends Omit<ConversationResponse, 'users'> {
   messages: Array<MessageInterface>,
-  users: Array<{id: string, username: string, isTyping: boolean, isTyping$: Subject<boolean>}>
+  users: Array<User>
   activeAvailable: boolean
   lastActive: Date,
+}
+
+export interface User {
+  id: string,
+  username: string,
+  isTyping: boolean,
+  isTyping$: Subject<boolean>
 }
