@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ChatService, MessageInterface} from './chat.service';
 import { Conversation, ConversationsService } from '../conversations-panel/conversations.service';
 import { NavigationEnd, Router } from '@angular/router';
-import { BehaviorSubject, debounceTime, filter, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, debounceTime, filter, interval, Observable, Subject } from 'rxjs';
 import { ConversationHTMLData, ConversationsPanelComponent } from '../conversations-panel/conversations-panel.component';
 import { FriendsService } from '../friends-panel/friends.service';
 import { User } from '../conversations-panel/conversations.service';
@@ -31,13 +31,14 @@ export class ChatPanelComponent {
 
     //on active conversation change
     this.chatService.currentConversation$.subscribe(_currentConversation => {
+      
       this.currentConversation = _currentConversation;
       this.messages = this.currentConversation?.messages!;
+      console.log(this.messages)
 
       //get message groups
-      if(this.currentConversation){
+      if(this.currentConversation)
         this.messageGroups = this.getMessagesGroups(this.currentConversation);
-      }
 
       //get conversationsHTMLData from conversationsService and friendsService
       if(this.conversationsService.conversationsData$.value){
@@ -51,6 +52,12 @@ export class ChatPanelComponent {
         else
           this.conversationSubtitle = '';
       }
+    });
+
+    //pool messages - TO CHANGE TO RACE WITH WS MESSAGE EVENT
+    interval(3000).subscribe(() => {
+      if(this.currentConversation)
+        this.conversationsService.getConversationMessages(this.currentConversation);
     });
 
   }
@@ -72,6 +79,7 @@ export class ChatPanelComponent {
     if(!sender)
       return [];
 
+    //cheking loop
     for(let i = startMessageIndex; i < conversationMessages.length; i++){
       if(conversationMessages[i].senderId !== sender!.id){
         result.push(i - 1);
@@ -81,16 +89,9 @@ export class ChatPanelComponent {
       }
     }
 
-    console.log(result)
-
-    
-    //find next change in message sender, then push to results and update current sender
-    // this.currentConversation?.messages.forEach((message, messageIndex) => {
-    //   if(message.senderId !== sender.id){
-    //     result.push(messageIndex - 1);
-    //     sender = conversationUsers.find(user => user.id === message.senderId)!;
-    //   }
-    // })
+    //check for last message
+    if(!conversationMessages.at(-1)?.self)
+      result.push(conversationMessages.length - 1);
 
     return result;
   }
@@ -127,6 +128,50 @@ export class ChatPanelComponent {
 
     return '';
   }
+
+  //get message's style display (inner, outer-bottom, outer-top)
+  public getMessageOrderStyleClass(conversation: Conversation, messageIndex: number): string {
+    
+    const messages = conversation.messages;
+    const message = conversation.messages[messageIndex];
+
+    if(messages && messages.length > 1){
+      
+      //search messages group first
+      if(this.messageGroups.includes(messageIndex) && messageIndex > 0 && !message.self && messages[messageIndex - 1].senderId === message.senderId)
+        return 'outer-bottom 1';
+
+      //check if messageIndex is marginal
+      if(messageIndex === 0){
+        if(messages[1].senderId === message.senderId)
+          return 'outer-top 2';
+        return '';
+      }
+      if(messageIndex === messages.length - 1){
+        if(messages[messageIndex - 1].senderId === message.senderId)
+          return 'outer-bottom 3';
+        return '';
+      }
+
+      //check previous and next messages
+      if(messages[messageIndex - 1].senderId === message.senderId){
+        if(messages[messageIndex + 1].senderId === message.senderId)
+          return 'inner';
+        return 'outer-bottom 4';
+      }
+      if(messages[messageIndex + 1].senderId === message.senderId)
+        return 'outer-top 5';
+      return '';
+    }
+      return '';
+  }
+
+  //send message
+  private sendMessage(messageContent: string) {
+
+    //send via service
+    if(this.currentConversation)
+      this.chatService.sendMessage(this.currentConversation, messageContent)
+  }
+
 }
-
-

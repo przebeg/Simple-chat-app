@@ -31,6 +31,7 @@
   align-items: center;
   justify-content: flex-end;
   flex-direction: column;
+  padding-bottom: 16px;
 }
 
 #message-input-bar {
@@ -87,16 +88,47 @@ textarea {
 
 
 .message {
+  position: relative;
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
   width: 100%;
   height: fit-content;
+  margin-bottom: 2px;
+}
+
+.message.inner .message-content {
+  border-radius: 10px 20px 20px 10px;
+}
+
+.message.outer-top .message-content {
+  border-radius: 20px 20px 20px 10px;
+}
+
+.message.outer-bottom .message-content {
+  border-radius: 10px 20px 20px 20px;
+}
+
+.message.inner.self .message-content {
+  border-radius: 20px 10px 10px 20px;
+}
+
+.message.self.outer-top .message-content {
+  border-radius: 20px 20px 10px 20px;
+}
+
+.message.self.outer-bottom .message-content {
+  border-radius: 20px 10px 20px 20px;
 }
 
 .message .user-element{
   width: auto;
+}
+
+.message .user-element {
+  position: absolute;
+  left: -77px;
 }
 
 .message .user-element .profile-image{
@@ -117,12 +149,10 @@ textarea {
   display: none;
 }
 
-.message.typing {
-  position: relative;
-  top: 100px;
-  animation: message-typing-appear 0.4s ease-in-out;
-  animation-fill-mode: forwards;
+.message-typing {
+  padding-top: 16px;
 }
+
 
 .message.typing .typing-animation{
   position: relative;

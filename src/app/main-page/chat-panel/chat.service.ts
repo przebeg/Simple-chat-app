@@ -79,7 +79,7 @@ export class ChatService {
       this.webSocket.emitEvent({
         eventType: WebSocketEventType.UserTyping,
         content: '',
-        subjectUsers: this.currentConversation.users.map(user => user.id),
+        //subjectUsers: this.currentConversation.users.map(user => user.id),
         senderId: "", //to be replaced in backend
         conversationId: this.currentConversation.id,
         state: this.isUserTyping
@@ -98,6 +98,16 @@ export class ChatService {
 
     //delegate to conversations service
     ConversationsService.setTyping(typingEvent, ChatService._conversationService);
+  }
+
+  //send message to conversation
+  public sendMessage(conversation: Conversation, messageContent: string) {
+    this.webSocket.emitEvent({
+      eventType: WebSocketEventType.Message,
+      content: messageContent,
+      conversationId: conversation.id,
+      senderId: "" //to be replaced in backend
+    })
   }
 }
 
@@ -148,9 +158,9 @@ interface WebSocketEvent {
   eventType: WebSocketEventType,
   content: string,
   conversationId: string,
-  subjectUsers: Array<string>, //participants IDs
+  subjectUsers?: Array<string>, //participants IDs
   senderId: string,
-  state: any
+  state?: any
 }
 
 export interface MessageEmojisSet {
