@@ -280,6 +280,10 @@ html{
   display: none;
 }
 
+.user-element.chat-element.active-now .group-image .profile-image::after {
+  display: none;
+}
+
 .user-element.typing .typing-animation{
   position: absolute;
   width: 32px;

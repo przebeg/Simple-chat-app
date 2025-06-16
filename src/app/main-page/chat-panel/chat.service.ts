@@ -92,14 +92,6 @@ export class ChatService {
     this.userMessage$.next(message);
   }
 
-  //set friend or conversation typing
-  public static setTyping(typingEvent: TypingInfo) {
-
-
-    //delegate to conversations service
-    ConversationsService.setTyping(typingEvent, ChatService._conversationService);
-  }
-
   //send message to conversation
   public sendMessage(conversation: Conversation, messageContent: string) {
     this.webSocket.emitEvent({
@@ -108,6 +100,21 @@ export class ChatService {
       conversationId: conversation.id,
       senderId: "" //to be replaced in backend
     })
+  }
+
+  //set friend or conversation typing
+  public static setTyping(typingEvent: TypingInfo) {
+
+
+    //delegate to conversations service
+    ConversationsService.setTyping(typingEvent, ChatService._conversationService);
+  }
+
+  //sync conversation on new message Ws event
+  public static onMessage(conversationId: string) {
+    const conversation = (ChatService._conversationService.conversations$.value as Array<Conversation>).find(conversation => conversation.id === conversationId);
+    if(conversation)
+      ChatService._conversationService.getConversationMessages(conversation);
   }
 }
 
@@ -136,9 +143,17 @@ class Socket {
 
       //switch event type
       switch (event.eventType) {
+
+        //user started typing
         case WebSocketEventType.UserTyping: 
 
           ChatService.setTyping({conversationId: event.conversationId, senderId: event.senderId, typing: event.state});
+        break;
+
+        //user has sent message
+        case WebSocketEventType.Message: 
+
+          ChatService.onMessage(event.conversationId);
         break;
       }
     }
@@ -168,12 +183,14 @@ export interface MessageEmojisSet {
   count: number
 }
 
+export type MessageState = 'sending' | 'sent' | 'red' | 'failed' | 'deleted';
 export interface MessageInterface {
   senderId: string,
   content: string,
   timestamp: Date,
   emojis: Array<MessageEmojisSet>
-  self: boolean
+  self: boolean,
+  state?: MessageState
 }
 
 export interface TypingInfo {

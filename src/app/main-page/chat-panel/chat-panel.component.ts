@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { ChatService, MessageInterface} from './chat.service';
 import { Conversation, ConversationsService } from '../conversations-panel/conversations.service';
 import { NavigationEnd, Router } from '@angular/router';
@@ -16,9 +16,10 @@ import { User } from '../conversations-panel/conversations.service';
 
 export class ChatPanelComponent {
 
+  @ViewChild('messageInput') messageInputElement: any;
+
   public messages: Array<MessageInterface> = [];
   public currentConversation: Conversation | null = null;
-  public typedMessage$: BehaviorSubject<string> = new BehaviorSubject('');
   public messageGroups: Array<number> = new Array<number>(0);
 
   //html bindings elements
@@ -26,6 +27,9 @@ export class ChatPanelComponent {
   public conversationSubtitle: string = '';
   public conversationImageQuery: string = '';
   public conversationActiveNow: boolean = false;
+  public messageInputContent: string = '';
+
+  private maxMessageLengt: number = 1000;
 
   constructor (private friendsService: FriendsService, private chatService: ChatService, private conversationsService: ConversationsService, private router: Router) {
 
@@ -99,6 +103,7 @@ export class ChatPanelComponent {
   //on user typing
   public messageInputChange(event: any) {
     this.chatService.userMessage$.next(event.target.value);
+    this.messageInputContent = event.target.value.toString();
   }
 
   //build last active text
@@ -167,11 +172,28 @@ export class ChatPanelComponent {
   }
 
   //send message
-  private sendMessage(messageContent: string) {
+  public sendMessage() {
+
+    //get content and check
+    if(this.messageInputContent.length > this.maxMessageLengt)
+      //TO DO: When message length exceeds max length
+      return;
 
     //send via service
-    if(this.currentConversation)
-      this.chatService.sendMessage(this.currentConversation, messageContent)
+    if(this.currentConversation && this.messageInputContent.length > 0){
+      this.chatService.sendMessage(this.currentConversation, this.messageInputContent.toString());
+      this.messageInputElement.nativeElement.value = '';
+    }
+
+    //make temp message to be viewed before syncing with server
+    this.messages.push({
+      senderId: 'null',
+      content: this.messageInputContent,
+      timestamp: new Date(Date.now()),
+      emojis: [],
+      self: true,
+      state: 'sending'
+    });
   }
 
 }

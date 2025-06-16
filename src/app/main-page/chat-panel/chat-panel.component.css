@@ -145,6 +145,18 @@ textarea {
   flex-direction: row-reverse;
 }
 
+.message.self.sending::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  right: -20px;
+  bottom: 8px;
+  background-color: transparent;
+  border-radius: 50%;
+  border: 2px solid #4a4a4a;
+}
+
 .message.self .profile-image {
   display: none;
 }
