@@ -2,7 +2,7 @@
     <input [formControl]="searchBarFormControl" class="global-text-input" type="text" placeholder="Search for users">
     <div id="results-wrapper" [class.placeholder] = "isPlaceholder" [class]="placeholderClass">
         @if(searchInProgress){
-            @for(n of placeholdersCount; track n){
+            @for(n of placeholdersCount; track $index){
                 <friend-conversation-loading-placeholder></friend-conversation-loading-placeholder>
             }
         }

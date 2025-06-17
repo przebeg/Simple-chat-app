@@ -23,7 +23,7 @@
             <div class="global-horizontal-divider"></div>
             <b class="medium-text text-left" style="width: 100%;">Friends</b>
         }
-        @for(user of friends; track user){
+        @for(user of friends; track user.id){
             <div class="user-element friend-user-element active-now" [class.active-now]="user.activeNow">
                 <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
                 <div class="labels">

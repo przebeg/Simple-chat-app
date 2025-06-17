@@ -21,6 +21,8 @@ export class ConversationsService {
   allowPlaceholder$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   activeConversation$: Subject<Conversation> = new Subject();
 
+  public scrollChatToBottom$: Subject<boolean> = new Subject<boolean>(); //scroll chat to bottom on current conversation switch
+
   //for data export
   public conversationsData$: BehaviorSubject<Array<ConversationHTMLData>> = new BehaviorSubject<Array<ConversationHTMLData>>([]);
 
@@ -165,12 +167,12 @@ export class ConversationsService {
 
       //if found, set as active
       if(conversation){
-        this.setActiveConversation(conversation);
+        this.setActiveConversation(conversation, true);
         return;
       }
 
       //when not found set first of array
-      this.setActiveConversation(conversations[0]);
+      this.setActiveConversation(conversations[0], true);
       return;
     }
 
@@ -190,25 +192,25 @@ export class ConversationsService {
         //if found select and navigate
         if(conversation){
           this.router.navigate(['conversations', '@' + conversation.type === 'private'? conversation.users[0].id : conversation.id]);
-          this.setActiveConversation(conversation);
+          this.setActiveConversation(conversation, true);
         }
 
         //else set first as active
         else {
-          this.setActiveConversation(conversations[0]);
+          this.setActiveConversation(conversations[0], true);
         }
       }
       else{
-        this.setActiveConversation(conversations[0]);
+        this.setActiveConversation(conversations[0], true);
       }
     }
     else {
-      this.setActiveConversation(conversations[0]);
+      this.setActiveConversation(conversations[0], true);
     }
   }
 
   //get messages of conversation by Id
-  public getConversationMessages(conversation: Conversation) {
+  public getConversationMessages(conversation: Conversation, conversationSwitch: boolean = false) {
 
     const conversationIndex = conversation.type === 'private'? (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.users[0].id === conversation.users[0].id && __conversation.users.length === 1) : (this.conversations$.value as Array<Conversation>).findIndex(__conversation => __conversation.id === conversation.id);
     const _conversation = this.conversations$.value[conversationIndex];
@@ -227,6 +229,10 @@ export class ConversationsService {
 
           this.conversations$.next(_conversations);
           this.activeConversation$.next(_conversation);
+
+          //scroll chat to bottom on current conversation switch
+          if(conversationSwitch)
+            this.scrollChatToBottom$.next(true);
         }
       });
     }
@@ -259,10 +265,10 @@ export class ConversationsService {
   }
 
   //proxying when setting active conversation
-  public setActiveConversation(conversation: Conversation) {
+  public setActiveConversation(conversation: Conversation, conversationSwitch: boolean = false) {
 
     //get active conversations message and update
-    this.getConversationMessages(conversation);
+    this.getConversationMessages(conversation, conversationSwitch);
   }
 
   //pooling conversations

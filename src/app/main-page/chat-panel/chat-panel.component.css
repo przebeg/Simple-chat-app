@@ -24,14 +24,16 @@
   height: 100%;
   width: 100%;
   flex-grow: 1;
+  flex-basis: 0;
   padding-left: 120px;
   padding-right: 200px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   flex-direction: column;
   padding-bottom: 16px;
+  overflow-y: scroll;
+  position: relative;
 }
 
 #message-input-bar {
@@ -86,7 +88,6 @@ textarea {
   aspect-ratio: 1;
 }
 
-
 .message {
   position: relative;
   display: flex;
@@ -98,12 +99,19 @@ textarea {
   margin-bottom: 2px;
 }
 
+.message .message-content {
+  max-width: 60%;
+  height: fit-content;
+  overflow-wrap: break-word;
+}
+
 .message.inner .message-content {
   border-radius: 10px 20px 20px 10px;
 }
 
 .message.outer-top .message-content {
   border-radius: 20px 20px 20px 10px;
+  margin-top: 32px;
 }
 
 .message.outer-bottom .message-content {
@@ -199,4 +207,5 @@ textarea {
   animation: dot-jump 1s infinite ease-out;
   animation-delay: 0.3s;
 }
+
 

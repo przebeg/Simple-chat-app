@@ -13,6 +13,7 @@ export class ChatService {
 
   public userMessage$: BehaviorSubject<string> = new BehaviorSubject<string>('');
   public currentConversation$: BehaviorSubject<Conversation | null> = new BehaviorSubject<Conversation | null>(null);
+  
   private currentConversation: Conversation | null = null;
   private isUserTyping: boolean = false;
 
@@ -111,10 +112,20 @@ export class ChatService {
   }
 
   //sync conversation on new message Ws event
-  public static onMessage(conversationId: string) {
-    const conversation = (ChatService._conversationService.conversations$.value as Array<Conversation>).find(conversation => conversation.id === conversationId);
-    if(conversation)
-      ChatService._conversationService.getConversationMessages(conversation);
+  public static onMessage(messageEvent: WebSocketEvent) {
+    const conversation = (ChatService._conversationService.conversations$.value as Array<Conversation>).find(conversation => conversation.id === messageEvent.conversationId);
+    if(conversation){
+
+      //stop typing
+      ConversationsService.setTyping({conversationId: messageEvent.conversationId, senderId: messageEvent.senderId, typing: false}, ChatService._conversationService)
+
+      //refresh messages
+      //ChatService._conversationService.getConversationMessages(conversation);
+
+      //refresh conversations
+      ChatService._conversationService.getConversations();
+    }
+
   }
 }
 
@@ -153,7 +164,7 @@ class Socket {
         //user has sent message
         case WebSocketEventType.Message: 
 
-          ChatService.onMessage(event.conversationId);
+          ChatService.onMessage(event);
         break;
       }
     }

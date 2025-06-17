@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, viewChild } from '@angular/core';
 import { ChatService, MessageInterface} from './chat.service';
 import { Conversation, ConversationsService } from '../conversations-panel/conversations.service';
 import { NavigationEnd, Router } from '@angular/router';
@@ -17,6 +17,7 @@ import { User } from '../conversations-panel/conversations.service';
 export class ChatPanelComponent {
 
   @ViewChild('messageInput') messageInputElement: any;
+  @ViewChild('chatsContainer') chatsContainerElement: any;
 
   public messages: Array<MessageInterface> = [];
   public currentConversation: Conversation | null = null;
@@ -28,6 +29,7 @@ export class ChatPanelComponent {
   public conversationImageQuery: string = '';
   public conversationActiveNow: boolean = false;
   public messageInputContent: string = '';
+  public displayLastMessageGroupUserElement: boolean = true;
 
   private maxMessageLengt: number = 1000;
 
@@ -35,14 +37,15 @@ export class ChatPanelComponent {
 
     //on active conversation change
     this.chatService.currentConversation$.subscribe(_currentConversation => {
+
+      if(!_currentConversation)
+        return;
       
       this.currentConversation = _currentConversation;
       this.messages = this.currentConversation?.messages!;
-      console.log(this.messages)
 
       //get message groups
-      if(this.currentConversation)
-        this.messageGroups = this.getMessagesGroups(this.currentConversation);
+      this.messageGroups = this.getMessagesGroups(this.currentConversation);
 
       //get conversationsHTMLData from conversationsService and friendsService
       if(this.conversationsService.conversationsData$.value){
@@ -55,6 +58,17 @@ export class ChatPanelComponent {
           this.conversationSubtitle = this.getLastActiveMessage(_conversation!)
         else
           this.conversationSubtitle = '';
+
+
+        //display or hide last group sender html user-element
+        if(this.currentConversation.type === 'private' && !this.currentConversation.messages.at(-1)?.self && this.currentConversation.users[0].isTyping)
+          this.displayLastMessageGroupUserElement = false;
+        else
+          this.displayLastMessageGroupUserElement = true;
+
+        //if any user is typing scroll to bottom
+        if(this.currentConversation.users.findIndex(user => user.isTyping) >= 0)
+          this.scrollToBottom();
       }
     });
 
@@ -63,6 +77,12 @@ export class ChatPanelComponent {
       if(this.currentConversation)
         this.conversationsService.getConversationMessages(this.currentConversation);
     });
+
+    //listen for request of chat scrolling to botton
+    this.conversationsService.scrollChatToBottom$.subscribe(v => {
+      if(v === true)
+        this.scrollToBottom({force: true});
+    })
 
   }
 
@@ -144,17 +164,17 @@ export class ChatPanelComponent {
       
       //search messages group first
       if(this.messageGroups.includes(messageIndex) && messageIndex > 0 && !message.self && messages[messageIndex - 1].senderId === message.senderId)
-        return 'outer-bottom 1';
+        return 'outer-bottom';
 
       //check if messageIndex is marginal
       if(messageIndex === 0){
         if(messages[1].senderId === message.senderId)
-          return 'outer-top 2';
+          return 'outer-top';
         return '';
       }
       if(messageIndex === messages.length - 1){
         if(messages[messageIndex - 1].senderId === message.senderId)
-          return 'outer-bottom 3';
+          return 'outer-bottom';
         return '';
       }
 
@@ -162,10 +182,10 @@ export class ChatPanelComponent {
       if(messages[messageIndex - 1].senderId === message.senderId){
         if(messages[messageIndex + 1].senderId === message.senderId)
           return 'inner';
-        return 'outer-bottom 4';
+        return 'outer-bottom';
       }
       if(messages[messageIndex + 1].senderId === message.senderId)
-        return 'outer-top 5';
+        return 'outer-top';
       return '';
     }
       return '';
@@ -194,6 +214,25 @@ export class ChatPanelComponent {
       self: true,
       state: 'sending'
     });
+
+    //force scroll to bottom
+    this.scrollToBottom({force: true});
+  }
+
+  //scroll chats container to bottom
+  public scrollToBottom({force}: {force: boolean} = {force: false}) {
+
+    setTimeout(() => {
+      if(force){
+        this.chatsContainerElement.nativeElement.scrollTop = this.chatsContainerElement.nativeElement.scrollHeight;
+        return;
+      }
+
+      //if user has scrolled less than 50px scroll to bottom
+      if(this.chatsContainerElement.nativeElement.scrollTop <= 50)
+        this.chatsContainerElement.nativeElement.scrollTop = this.chatsContainerElement.nativeElement.scrollHeight;
+
+    }, 0)
   }
 
 }

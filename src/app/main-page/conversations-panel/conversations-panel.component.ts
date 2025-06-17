@@ -196,7 +196,7 @@ export class ConversationsPanelComponent {
     this.router.navigate(['conversations', `@${conversation.type === 'private'? conversation.users[0].id: conversation.id}`]);
 
     //change active conversation in service
-    this.conversationsService.setActiveConversation(conversation)
+    this.conversationsService.setActiveConversation(conversation, true);
   }
 
 }

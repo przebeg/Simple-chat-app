@@ -13,7 +13,7 @@
                 @case ('private') {<div class="profile-image" [style.background-image]="conversation.conversationImageQuery"></div>}
                 @case ('group') {
                     <div class="profile-image group-image">
-                        @for(user of conversation.users; track user){
+                        @for(user of conversation.users; track user.id){
                             <div class="profile-image group-user-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + user.id + '), url(/assets/profile-image-placeholder.png)'"></div>
                         }
                     </div>
