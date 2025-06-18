@@ -195,13 +195,15 @@ export interface MessageEmojisSet {
 }
 
 export type MessageState = 'sending' | 'sent' | 'red' | 'failed' | 'deleted';
+export type MessageType = 'text' | 'file' | 'image' | 'video' | 'emoji' | 'deleted' | 'userAdded' | 'userRemoved' | 'nameChanged' | 'created'
 export interface MessageInterface {
   senderId: string,
   content: string,
   timestamp: Date,
   emojis: Array<MessageEmojisSet>
   self: boolean,
-  state?: MessageState
+  state?: MessageState,
+  type?: MessageType
 }
 
 export interface TypingInfo {

@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject, last, Subject, merge, timer, map, interval, switchMap, takeUntil} from 'rxjs';
+import { BehaviorSubject, last, Subject, merge, timer, map, interval, switchMap, take, takeUntil, Observable} from 'rxjs';
 import { Friend, FriendsService } from '../friends-panel/friends.service';
 import { SsrCookieService } from 'ngx-cookie-service-ssr';
 import { Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
-import { ChatService, MessageInterface, TypingInfo } from '../chat-panel/chat.service';
+import { ChatService, MessageInterface, MessageType, TypingInfo } from '../chat-panel/chat.service';
 import { ConversationHTMLData } from './conversations-panel.component';
 import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -271,20 +271,54 @@ export class ConversationsService {
     this.getConversationMessages(conversation, conversationSwitch);
   }
 
+  //try to find conversation, or create new one
+  public openConversation({usersIds, conversationType}: {usersIds: Array<string>, conversationType: ConversationType}) {
+    
+    //update conversations and look for requested (if type is private)
+    if(conversationType === 'private' && usersIds.length === 1){
+
+      //refresh conversations
+      this.updateConversationsSilent().subscribe(updateStatus => {
+        if(updateStatus){
+
+          const _conversation = (this.conversations$.value as Array<Conversation>).find(conversation => conversation.users[0].id === usersIds[0]);
+          
+          //if conversation is found switch to it
+          if(_conversation){
+            this.router.navigate(['conversations', '@' + usersIds[0]]);
+            this.setActiveConversation(_conversation, true);
+            return;
+          }
+
+          //else open new conversation
+          else {
+
+            //request
+            this.httpClient.put<{state: string, message: string, conversationId?: string}>('api/express/conversations/openConversation', {subjectId: usersIds[0]}, {withCredentials: true}).subscribe(response => {
+              
+              //if got conversationId, recall function and switch to
+              if(response.conversationId)
+                this.openConversation({usersIds: usersIds, conversationType: 'private'});
+            })
+          }
+        }
+      })
+    }
+  }
+
   //pooling conversations
-  private updateConversationsSilent() {
+  private updateConversationsSilent(): Observable<boolean> {
 
     //request
     const response$ = this.httpClient.get<{state: string, message: string, conversations: Array<ConversationResponse>}>('api/express/conversations/getConversations', {
       withCredentials: true, 
-    });
-    
-    response$.subscribe(response => {
+    }).pipe(map(response => {
       if(response.state === 'success'){
+
         this.conversations$.next(response.conversations.map(conversation => {
 
           //get conversation twin from previously saved conversations
-          const conversationTwin = (this.conversations$.value as Array<Conversation>).find(_conversation => _conversation.id === conversation.id)
+          const conversationTwin = (this.conversations$.value as Array<Conversation>).find(_conversation => _conversation.id === conversation.id);
           
           //unsubscribe from previous isTyping$s
           if(conversationTwin)
@@ -319,8 +353,16 @@ export class ConversationsService {
 
         this.conversationsLoadingInProgress$.next(false);
         this.allowPlaceholder$.next(!response.conversations || response.conversations.length === 0);
+
+        return true;
       }
-    });
+
+      return false;
+    }), take(1));
+
+    response$.subscribe();
+    return response$
+  
   }
 
   //subscribe to each user isTyping$
@@ -362,7 +404,8 @@ interface ConversationResponse {
     senderId: string,
     content: string,
     timestamp: Date,
-    emojis: Array<string>
+    emojis: Array<string>,
+    type?: MessageType
   }
   type: ConversationType,
   name: string

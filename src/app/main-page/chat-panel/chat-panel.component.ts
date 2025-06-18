@@ -44,6 +44,9 @@ export class ChatPanelComponent {
       this.currentConversation = _currentConversation;
       this.messages = this.currentConversation?.messages!;
 
+      //parse event messages
+      this.parseEventMessages(this.messages);
+
       //get message groups
       this.messageGroups = this.getMessagesGroups(this.currentConversation);
 
@@ -89,7 +92,7 @@ export class ChatPanelComponent {
   //get message groups - message sequences that were sent in a row by the same user
   private getMessagesGroups(conversation: Conversation): Array<number> {
 
-    if(!conversation)
+    if(!conversation || conversation!.messages.length < 2)
       return [];
     
     const result = new Array<number>(0);
@@ -233,6 +236,17 @@ export class ChatPanelComponent {
         this.chatsContainerElement.nativeElement.scrollTop = this.chatsContainerElement.nativeElement.scrollHeight;
 
     }, 0)
+  }
+
+  public parseEventMessages(messages: Array<MessageInterface>) {
+    messages.forEach(message => {
+      if(message.type){
+        switch(message.type){
+          case 'created': 
+            message.content = `Conversation started on ${new Date(message.timestamp).toLocaleString().slice(0, -3)}`;
+        }
+      }
+    })
   }
 
 }

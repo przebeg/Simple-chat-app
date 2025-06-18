@@ -24,7 +24,7 @@
     <div #chatsContainer id="chats-container">
         @if(messages){
             @for(message of messages; track $index){
-                <div class="message" [class.self]="message.self" [class]="[getMessageOrderStyleClass(currentConversation!, $index), message.state?? '']">
+                <div class="message" [class]="[getMessageOrderStyleClass(currentConversation!, $index), message.state?? '', message.type, message.self? 'self' : '']">
                     @if(messageGroups.includes($index) && displayLastMessageGroupUserElement){
                         <div class="user-element">
                             <div class="profile-image" [style.background-image]="'url(http://localhost:3000/api/express/data/profileImage/' + message.senderId + '), url(' + '/assets/profile-image-placeholder.png' + ')'"></div>

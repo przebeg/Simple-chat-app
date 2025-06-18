@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FriendConversationLoadingPlaceholderComponent } from '../friend-conversation-loading-placeholder/friend-conversation-loading-placeholder.component';
 import {interval, Observable} from 'rxjs'
 import { FriendsService, Friend, FriendRequest } from './friends.service';
+import { ConversationsService } from '../conversations-panel/conversations.service';
 
 @Component({
   selector: 'friends-panel',
@@ -19,7 +20,7 @@ export class FriendsPanelComponent {
   friendsRequests: Array<FriendRequestComponentData> = [];
   allowPlaceholder: boolean;
 
-  constructor(private friendsService: FriendsService) {
+  constructor(private friendsService: FriendsService, private conversationService: ConversationsService) {
 
     //allow placeholder
     this.allowPlaceholder = this.friendsService.allowPlaceholder$.value;
@@ -48,7 +49,7 @@ export class FriendsPanelComponent {
       ...friend,
       buttonsDisabled: false,
       actionInProgress: false,
-      removeFreidnButtonLoading: false
+      removeFriendButtonLoading: false
     })});
     this.friends.forEach(friend => this.setLastActiveMessage(friend));
   }
@@ -82,11 +83,11 @@ export class FriendsPanelComponent {
 
     //last active <1d && >1h
     else if(timeDiff / (1000 * 60 * 60) < 24)
-      friend.message = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60))}h ago`;
+      friend.message = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60))} h ago`;
 
     //last active >1d
     else if(timeDiff / (1000 * 60 * 24) >= 24)
-      friend.message = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60 * 24))}d ago`;
+      friend.message = `Last active ${Math.floor(timeDiff / (1000 * 60 * 60 * 24))} ${Math.floor(timeDiff / (1000 * 60 * 60 * 24)) > 1? 'days' : 'day'} ago`;
   }
 
   //decline friend request
@@ -117,23 +118,30 @@ export class FriendsPanelComponent {
   }
 
   //remove friend
-  removeFriend(friend: FriendComponentData) {
+  public removeFriend(friend: FriendComponentData) {
     if(friend.actionInProgress)
       return;
 
     friend.actionInProgress = true;
-    friend.removeFreidnButtonLoading = true;
+    friend.removeFriendButtonLoading = true;
     friend.buttonsDisabled = true;
 
     //remove friend http request
     this.friendsService.removeFriend(friend.id);
+  }
+
+  //send message (or start new conversation)
+  public sendMessageClick(friendObject: FriendComponentData) {
+
+    //for private only
+    this.conversationService.openConversation({usersIds: [friendObject.id], conversationType: 'private'});
   }
 }
 
 interface FriendComponentData extends Friend {
   buttonsDisabled: boolean,
   actionInProgress: boolean,
-  removeFreidnButtonLoading: boolean
+  removeFriendButtonLoading: boolean
 }
 
 interface FriendRequestComponentData extends FriendRequest {

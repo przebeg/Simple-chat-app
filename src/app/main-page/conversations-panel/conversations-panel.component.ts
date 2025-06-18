@@ -104,6 +104,15 @@ export class ConversationsPanelComponent {
     let lastMessageUserUsername: string;
     let _lastMessageContent: string = lastMessage.content;
 
+    //check type
+    if(lastMessage.type){
+      switch(lastMessage.type){
+        case 'created':
+          _lastMessageContent = 'Conversation started'
+        break;
+      }
+    }
+
     //check if last message was sent by this user
     if(lastMessageUserIndex < 0)
       lastMessageUserUsername = 'You';
